@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <title>这个圈子 - H5</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    :root{
+      --app-width: 1100px;
+
+      /* 明亮毛玻璃：浅底 + 半透明面板 + 深色文字 */
+      --bg0:#f8fafc;
+      --bg1:#eef2ff;
+      --bg2:#f5f3ff;
+      --panel: rgba(255,255,255,.72);
+      --panel2: rgba(255,255,255,.52);
+      --stroke: rgba(2,6,23,.12);
+      --stroke2: rgba(2,6,23,.08);
+      --text:#0f172a;
+      --muted: rgba(15,23,42,.70);
+      --muted2: rgba(15,23,42,.55);
+      --accent1:#4f46e5;
+      --accent2:#7c3aed;
+      --accent3:#ec4899;
+      --good:#16a34a;
+      --bad:#dc2626;
+      --warn:#d97706;
+      --shadow: 0 20px 60px rgba(15,23,42,.15);
+      --shadow2: 0 10px 30px rgba(15,23,42,.10);
+      --radius-xl: 22px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html,body{ height:100%; }
+    body{
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(1000px 500px at 20% -10%, rgba(236,72,153,.22), transparent 55%),
+        radial-gradient(900px 500px at 85% 0%, rgba(79,70,229,.18), transparent 55%),
+        linear-gradient(135deg, var(--bg0), var(--bg1) 45%, var(--bg2));
+      color:var(--text);
+      -webkit-tap-highlight-color: transparent;
+      overscroll-behavior: contain;
+    }
+
+    .shell{
+      max-width: var(--app-width);
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      padding-bottom: calc(72px + var(--safe-bottom));
+    }
+
+    /* 顶部安全区容错 */
+    .top-safe{
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* 顶部小导航（简化版） */
+    .topbar{
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      padding: 12px 16px 10px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52));
+      border-bottom: 1px solid rgba(2,6,23,.08);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .brand .dot{
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--accent1), var(--accent2));
+      box-shadow: 0 0 0 6px rgba(124,58,237,.18);
+      flex-shrink:0;
+    }
+    .brand .title{
+      font-weight: 800;
+      letter-spacing: .02em;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .icon-btn{
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      position: relative;
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.55);
+      color: rgba(15,23,42,.85);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      transition: transform .15s, background .2s, border-color .2s;
+    }
+    .icon-btn:active{ transform: scale(.97); }
+    .icon-btn:hover{ background: rgba(255,255,255,.72); border-color: rgba(2,6,23,.16); }
+
+    main{
+      padding: 16px;
+      padding-bottom: calc(84px + var(--safe-bottom));
+    }
+
+    .panel{ display:none; animation: fadeIn .25s ease both; }
+    .panel.active{ display:block; }
+
+    @keyframes fadeIn{
+      from{ opacity:0; transform: translateY(8px); }
+      to{ opacity:1; transform: translateY(0); }
+    }
+
+    /* 通用卡片 */
+    .card{
+      background: linear-gradient(180deg, var(--panel), var(--panel2));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow2);
+    }
+    .card-pad{ padding: 16px; }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      line-height: 1;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.65);
+      color: rgba(15,23,42,.86);
+      white-space: nowrap;
+    }
+    .chip.good{ border-color: rgba(34,197,94,.30); background: rgba(34,197,94,.14); color: rgba(20,83,45,.96); }
+    .chip.lock{ border-color: rgba(245,158,11,.30); background: rgba(245,158,11,.14); color: rgba(146,64,14,.96); }
+    .chip.badge{
+      background: rgba(124,58,237,.14);
+      border-color: rgba(124,58,237,.22);
+      color: rgba(76,29,149,.92);
+    }
+
+    .hero{
+      border-radius: 34px;
+      padding: 20px 18px;
+      background:
+        radial-gradient(900px 240px at 20% 10%, rgba(236,72,153,.35), transparent 55%),
+        radial-gradient(700px 260px at 80% 0%, rgba(99,102,241,.45), transparent 60%),
+        linear-gradient(135deg, rgba(79,70,229,.95), rgba(124,58,237,.95));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: 0 20px 70px rgba(79,70,229,.35);
+      overflow:hidden;
+      position: relative;
+    }
+    .hero:after{
+      content:"";
+      position:absolute;
+      inset:-80px -80px auto auto;
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.35), transparent 55%);
+      transform: rotate(10deg);
+      pointer-events:none;
+    }
+
+    .hero h1{
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .02em;
+      margin-bottom: 6px;
+    }
+    .hero .sub{
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
+
+    .hero-row{
+      display:flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hero-info{
+      flex:1;
+      min-width:0;
+    }
+    .hero-info .k{
+      font-weight: 800;
+      font-size: 14px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .hero-info .v{
+      color: rgba(255,255,255,.85);
+      font-size: 12px;
+    }
+
+    .cta{
+      border: 0;
+      cursor:pointer;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.92);
+      color: #2e1065;
+      font-weight: 900;
+      font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.25);
+      transition: transform .15s, filter .2s;
+      white-space: nowrap;
+    }
+    .cta:active{ transform: scale(.98); }
+    .cta:hover{ filter: brightness(1.03); }
+
+    .section-title{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 18px 0 12px;
+    }
+    .section-title h2{
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: .01em;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .section-title .link{
+      color: var(--muted);
+      font-size: 12px;
+      cursor:pointer;
+      user-select:none;
+      white-space: nowrap;
+    }
+
+    .circle-item{
+      display:flex;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(2,6,23,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52));
+      box-shadow: 0 12px 30px rgba(15,23,42,.12);
+      cursor:pointer;
+      transition: transform .15s, border-color .2s, background .2s;
+    }
+    .circle-item:active{ transform: scale(.99); }
+    .circle-item:hover{ border-color: rgba(124,58,237,.22); background: linear-gradient(180deg, rgba(255,255,255,.86), rgba(255,255,255,.58)); }
+
+    .circle-cover{
+      width: 64px;
+      height: 64px;
+      border-radius: 18px;
+      object-fit: cover;
+      flex-shrink:0;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.55);
+    }
+    .circle-meta{
+      flex:1;
+      min-width:0;
+    }
+    .circle-top{
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+    .circle-name{
+      font-weight: 950;
+      font-size: 15px;
+      letter-spacing: .01em;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+    .tag-row{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .tag{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(124,58,237,.22);
+      background: rgba(124,58,237,.10);
+      color: rgba(76,29,149,.92);
+    }
+    .desc{
+      font-size: 13px;
+      color: var(--muted);
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow:hidden;
+    }
+    .members{
+      margin-top: 10px;
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      color: var(--muted2);
+      font-size: 12px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+
+    /* 热议贴 */
+    .post-item{
+      padding: 14px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(2,6,23,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52));
+      box-shadow: 0 12px 30px rgba(15,23,42,.10);
+      margin-bottom: 12px;
+    }
+    .post-head{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      margin-bottom: 10px;
+    }
+    .avatar{
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      object-fit: cover;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.55);
+    }
+    .author{
+      font-weight: 900;
+      font-size: 13px;
+      margin-bottom: 2px;
+    }
+    .post-sub{
+      font-size: 12px;
+      color: var(--muted2);
+    }
+    .post-content{
+      font-size: 14px;
+      color: rgba(15,23,42,.90);
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .post-actions{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(2,6,23,.08);
+      color: rgba(15,23,42,.60);
+    }
+    .action-btn{
+      flex:1;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 6px;
+      border-radius: 12px;
+      transition: background .2s, color .2s, transform .15s;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .action-btn:active{ transform: scale(.99); }
+    .action-btn:hover{ background: rgba(2,6,23,.06); }
+
+    .action-btn.heart:hover{ color: #fb7185; }
+    .action-btn.comment:hover{ color: #a5b4fc; }
+
+    /* 底部 Tab bar */
+    .tab-bar{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: var(--app-width);
+      max-width: calc(100vw);
+      padding-bottom: var(--safe-bottom);
+      z-index: 100;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(2,6,23,.08);
+    }
+    .tab-bar-inner{
+      display:flex;
+      justify-content: space-around;
+      padding: 10px 10px 12px;
+    }
+    .tab{
+      width: 25%;
+      border: 0;
+      background: transparent;
+      color: rgba(15,23,42,.58);
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      justify-content:center;
+      gap: 6px;
+      padding: 6px 4px;
+      cursor:pointer;
+      transition: color .2s, transform .15s;
+      font-weight: 900;
+    }
+    .tab:active{ transform: scale(.98); }
+    .tab.active{ color: rgba(167,139,250,.98); }
+    .tab i{ font-size: 18px; }
+    .tab span{ font-size: 11px; }
+
+    /* 圈子详情（外部视角） */
+    .circle-cover-wrap{
+      position: relative;
+      height: 255px;
+      border-radius: 34px;
+      overflow:hidden;
+      border: 1px solid rgba(2,6,23,.10);
+      box-shadow: 0 20px 70px rgba(15,23,42,.18);
+    }
+    .circle-cover-wrap img{
+      width:100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(1.05) contrast(1.02);
+    }
+    .circle-cover-wrap:after{
+      content:"";
+      position:absolute; inset:0;
+      background:
+        linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.75) 78%),
+        radial-gradient(600px 200px at 30% 0%, rgba(124,58,237,.35), transparent 60%);
+    }
+    .circle-back{
+      position:absolute;
+      top: 14px;
+      left: 14px;
+      z-index: 2;
+      width: 40px; height: 40px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.55);
+      background: rgba(255,255,255,.65);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      color: rgba(15,23,42,.92);
+      transition: transform .15s, background .2s, border-color .2s;
+    }
+    .circle-back:active{ transform: scale(.98); }
+    .circle-head{
+      position:absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 14px;
+      z-index: 2;
+    }
+    .circle-head h1{
+      font-size: 26px;
+      font-weight: 1000;
+      margin-bottom: 6px;
+      letter-spacing: .01em;
+    }
+    .circle-head p{
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+      line-height: 1.45;
+      display:-webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow:hidden;
+      margin-top: 8px;
+    }
+    .circle-badges{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    /* 外部视角内容模块 */
+    .module{
+      margin-top: 18px;
+    }
+    .module h2{
+      font-size: 16px;
+      font-weight: 950;
+      margin-bottom: 10px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .module .box{
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.62);
+      padding: 14px;
+      color: rgba(15,23,42,.82);
+      line-height: 1.65;
+      font-size: 14px;
+    }
+
+    .preview-row{
+      display:flex;
+      gap: 12px;
+      overflow-x:auto;
+      padding-bottom: 10px;
+      scroll-snap-type: x mandatory;
+    }
+    .preview-thumb{
+      flex: 0 0 130px;
+      height: 130px;
+      border-radius: 18px;
+      position: relative;
+      overflow:hidden;
+      border: 1px solid rgba(2,6,23,.12);
+      scroll-snap-align: start;
+      background: rgba(255,255,255,.55);
+    }
+    .preview-thumb img{
+      width:100%; height:100%; object-fit: cover;
+      filter: saturate(1.1);
+    }
+    .preview-thumb:after{
+      content:"";
+      position:absolute; inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.05), rgba(0,0,0,.55));
+      opacity: .8;
+    }
+    .preview-lock{
+      position:absolute;
+      left: 50%; top: 50%;
+      transform: translate(-50%,-50%);
+      z-index: 2;
+      width: 44px; height: 44px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(0,0,0,.25);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: rgba(255,255,255,.92);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* 底部验证按钮 */
+    .bottom-cta{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 0;
+      width: var(--app-width);
+      max-width: calc(100vw);
+      z-index: 120;
+      padding: 12px 16px calc(var(--safe-bottom) + 12px);
+      background: linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,.45) 30%, rgba(248,250,252,.88) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    .bottom-cta .btn{
+      width: 100%;
+      border: 0;
+      cursor:pointer;
+      border-radius: 999px;
+      padding: 14px 18px;
+      font-size: 14px;
+      font-weight: 1000;
+      color: rgba(255,255,255,.96);
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      box-shadow: 0 22px 70px rgba(124,58,237,.35);
+      transition: transform .15s, filter .2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap: 10px;
+    }
+    .bottom-cta .btn:active{ transform: scale(.99); }
+    .bottom-cta .btn:hover{ filter: brightness(1.02); }
+
+    /* 圈子加入后：子标签 */
+    .subtabs{
+      display:flex;
+      gap: 12px;
+      padding: 0 2px;
+      margin: 14px 0;
+      overflow:auto;
+      scrollbar-width: none;
+    }
+    .subtabs::-webkit-scrollbar{ display:none; }
+    .subtab{
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.55);
+      color: rgba(15,23,42,.70);
+      cursor:pointer;
+      font-weight: 950;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: background .2s, border-color .2s, color .2s, transform .15s;
+    }
+    .subtab:active{ transform: scale(.99); }
+    .subtab.active{
+      background: rgba(124,58,237,.16);
+      border-color: rgba(124,58,237,.30);
+      color: rgba(76,29,149,.98);
+    }
+
+    /* Joined 私域聊天/论坛：统一消息结构 */
+    .msg-list{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-bottom: 16px;
+    }
+    .msg-row{
+      display:flex;
+      gap: 10px;
+      align-items:flex-end;
+    }
+    .msg-row.me{ justify-content:flex-end; }
+    .msg-bubble{
+      max-width: 76%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.60);
+      color: rgba(15,23,42,.90);
+      line-height: 1.45;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .msg-row.me .msg-bubble{
+      background: linear-gradient(180deg, rgba(124,58,237,.30), rgba(79,70,229,.22));
+      border-color: rgba(124,58,237,.34);
+      color: rgba(255,255,255,.96);
+    }
+    .msg-meta{
+      font-size: 11px;
+      color: rgba(15,23,42,.55);
+      margin-top: 6px;
+      text-align: left;
+    }
+    .msg-row.me .msg-meta{ text-align:right; }
+
+    .composer{
+      position: sticky;
+      bottom: 0;
+      z-index: 15;
+      padding-top: 10px;
+      padding-bottom: calc(var(--safe-bottom) + 12px);
+      background: linear-gradient(180deg, rgba(248,250,252,0), rgba(248,250,252,.82));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(2,6,23,.08);
+    }
+    .composer form{
+      display:flex;
+      gap: 10px;
+      padding: 10px 10px 0 10px;
+      align-items:flex-end;
+    }
+    .input{
+      flex:1;
+      border-radius: 16px;
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.65);
+      color: rgba(15,23,42,.92);
+      padding: 10px 12px;
+      outline: none;
+      font-size: 13px;
+      min-height: 42px;
+      max-height: 120px;
+      resize: none;
+    }
+    .send-btn{
+      width: 46px;
+      height: 42px;
+      border-radius: 16px;
+      border: 0;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      color: rgba(255,255,255,.96);
+      cursor:pointer;
+      box-shadow: 0 18px 40px rgba(124,58,237,.25);
+      transition: transform .15s, filter .2s;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+    .send-btn:active{ transform: scale(.99); }
+
+    /* Modal */
+    .modal-overlay{
+      position: fixed;
+      inset:0;
+      background: rgba(15,23,42,.35);
+      z-index: 200;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      animation: fadeIn .2s ease both;
+    }
+    .modal{
+      width: 100%;
+      max-width: 380px;
+      border-radius: 22px;
+      overflow:hidden;
+      border: 1px solid rgba(2,6,23,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.62));
+      box-shadow: var(--shadow);
+    }
+    .modal-head{
+      padding: 18px 16px;
+      background: linear-gradient(90deg, rgba(79,70,229,.95), rgba(124,58,237,.95));
+      position: relative;
+    }
+    .modal-head h3{
+      font-size: 16px;
+      font-weight: 1000;
+      margin-bottom: 4px;
+    }
+    .modal-head p{
+      font-size: 12px;
+      color: rgba(255,255,255,.86);
+    }
+    .modal-close{
+      position:absolute;
+      top: 12px;
+      right: 12px;
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.20);
+      background: rgba(255,255,255,.12);
+      color: rgba(255,255,255,.92);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      transition: transform .15s, background .2s;
+    }
+    .modal-close:active{ transform: scale(.99); }
+
+    .modal-body{
+      padding: 16px;
+    }
+    .q-progress{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .progress-pill{
+      font-size: 12px;
+      font-weight: 1000;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.95);
+    }
+    .progress-dots{
+      display:flex;
+      gap: 6px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .dot{
+      width: 22px;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.22);
+    }
+    .dot.on{
+      background: rgba(255,255,255,.92);
+    }
+    .q-text{
+      font-size: 14px;
+      font-weight: 950;
+      margin-bottom: 14px;
+      line-height: 1.45;
+      letter-spacing: .01em;
+    }
+    .opt-list{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .opt{
+      width:100%;
+      text-align:left;
+      border-radius: 16px;
+      padding: 12px 12px;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.62);
+      color: rgba(15,23,42,.88);
+      cursor:pointer;
+      font-weight: 900;
+      transition: transform .15s, border-color .2s, background .2s;
+    }
+    .opt:hover{ border-color: rgba(124,58,237,.34); background: rgba(124,58,237,.12); }
+    .opt:active{ transform: scale(.995); }
+
+    /* Toast */
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 12px;
+      z-index: 300;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(2,6,23,.10);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      color: rgba(15,23,42,.95);
+      padding: 10px 14px;
+      border-radius: 999px;
+      box-shadow: 0 20px 60px rgba(15,23,42,.15);
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-weight: 900;
+      font-size: 13px;
+      animation: toastIn .25s ease both;
+    }
+    @keyframes toastIn{
+      from{ opacity:0; transform: translateX(-50%) translateY(-6px); }
+      to{ opacity:1; transform: translateX(-50%) translateY(0); }
+    }
+
+    /* 桌面：卡片网格更紧凑一点 */
+    @media (min-width: 900px){
+      .grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+    }
+
+    /* 移动端：收窄到接近手机视口 */
+    @media (max-width: 520px){
+      .shell{ max-width: 430px; }
+      .tab-bar{ width: 430px; }
+      .bottom-cta{ width: 430px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell" id="appRoot" aria-live="polite"></div>
+
+  <script>
+    // ------------------------------
+    // 数据（来自你给的 React 代码）
+    // ------------------------------
+    const CIRCLES = [
+      {
+        id: 'guofeng',
+        name: '国风动漫社',
+        tags: ['二次元', '汉服', '同人创作'],
+        members: 1284,
+        desc: '专注国漫安利、汉服形制研究与同人创作的聚集地。',
+        cover: 'https://images.unsplash.com/photo-1541844053589-346841d0b34c?auto=format&fit=crop&q=80&w=800',
+        jargons: [
+          { word: '谷子', meaning: 'Goods的谐音，指动漫周边产品，如徽章、立牌等。' },
+          { word: '设子', meaning: 'OC (Original Character)，自己原创设计的角色。' },
+          { word: '形制', meaning: '汉服的款式结构，如明制马面裙、宋制旋裙等。' },
+          { word: '扩列', meaning: '扩充好友列表，即交朋友、加好友。' }
+        ],
+        quiz: [
+          {
+            question: '以下哪部属于优秀的国产动画（国漫）？',
+            options: ['A. 《大理寺日志》', 'B. 《火影忍者》', 'C. 《进击的巨人》'],
+            answer: 0
+          },
+          {
+            question: '圈内常说的“吃谷”是指什么行为？',
+            options: ['A. 提倡节约粮食', 'B. 购买动漫周边产品', 'C. 一种特定的汉服穿着方式'],
+            answer: 1
+          }
+        ]
+      },
+      {
+        id: 'dance',
+        name: '街舞交流圈',
+        tags: ['Popping', 'HipHop', '编舞'],
+        members: 3420,
+        desc: 'B-boy和B-girl的线上聚集地，分享日常练习、扒舞讨论与同城约练。',
+        cover: 'https://images.unsplash.com/photo-1535597408906-620a52538006?auto=format&fit=crop&q=80&w=800'
+      },
+      {
+        id: 'transit',
+        name: '交通迷运转群',
+        tags: ['铁道', '公交', '民航'],
+        members: 856,
+        desc: '记录城市脉络，分享列车交路、公交迷日常与运转记录。',
+        cover: 'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&q=80&w=800'
+      }
+    ];
+
+    const POSTS = [
+      {
+        id: 1,
+        circleId: 'guofeng',
+        author: '云中君',
+        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150',
+        content: '周末的漫展返图来啦！这次尝试了《雾山五行》的同人穿搭，遇到好多同好，太开心了！大家帮忙看看这套形制对不对？',
+        likes: 342,
+        comments: 56,
+        time: '2小时前'
+      },
+      {
+        id: 2,
+        circleId: 'guofeng',
+        author: '画师小透明',
+        avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=150',
+        content: '求推荐适合新手入门的国漫板绘教程！最近看《大理寺日志》手痒想画同人图，但是毫无头绪，求各位大触指点迷津🙏',
+        likes: 89,
+        comments: 21,
+        time: '5小时前'
+      }
+    ];
+
+    const EVENTS = [
+      {
+        id: 'ev-guofeng-1',
+        circleId: 'guofeng',
+        title: '周末汉服同好聚会',
+        time: '周六 14:00-16:30',
+        location: '校内草坪',
+        tag: '线下',
+        desc: '轻量拍照 + 穿搭交流 + 形制答疑。报名后会显示在“个人-我的活动”里（本地演示）。'
+      },
+      {
+        id: 'ev-guofeng-2',
+        circleId: 'guofeng',
+        title: '黑话词典挑战赛',
+        time: '周三 19:30',
+        location: '圈子论坛（线上）',
+        tag: '线上',
+        desc: '用 5 分钟答题掌握圈内常用词。答对会获得“萌新通行证”（仅 UI 演示）。'
+      },
+      {
+        id: 'ev-dance-1',
+        circleId: 'dance',
+        title: 'Popping 基础律动共练',
+        time: '周日 10:00-12:00',
+        location: '舞房 A 区',
+        tag: '线下',
+        desc: '从 torso isolation 开始，配合音乐结构做 2 轮 breakdown。'
+      },
+      {
+        id: 'ev-dance-2',
+        circleId: 'dance',
+        title: '编舞思路分享夜',
+        time: '周五 20:00',
+        location: '圈子聊天室',
+        tag: '线上',
+        desc: '分享 8-count 编舞框架，现场拆解“为什么这样编”。'
+      },
+      {
+        id: 'ev-transit-1',
+        circleId: 'transit',
+        title: '列车交路记录打卡',
+        time: '周六 09:00',
+        location: '同城路线',
+        tag: '线下',
+        desc: '发你今天看到的交路组合，并附上你的小观察（本地演示）。'
+      },
+      {
+        id: 'ev-transit-2',
+        circleId: 'transit',
+        title: '公交路线知识交换',
+        time: '周四 19:00',
+        location: '圈子论坛（线上）',
+        tag: '线上',
+        desc: '把你最常用的一条路线“讲清楚”。'
+      }
+    ];
+
+    const NOTIFICATIONS = [
+      {
+        id: 'n-join-guide',
+        title: '欢迎使用 Web 增强版',
+        body: '加入/聊天/点赞/评论/发帖等内容将保存在本地浏览器（演示 Web 功能）。',
+        time: '今天'
+      },
+      {
+        id: 'n-event-rsvp',
+        title: '活动 RSVP 支持',
+        body: '你可以在“圈子-活动组织”里点击报名，之后在“个人中心”查看你的已报名活动（本地演示）。',
+        time: '今天'
+      },
+      {
+        id: 'n-community-rules',
+        title: '社区小提示',
+        body: '发言前先自检：尊重、清晰、少水。让同好更容易找到有用信息。',
+        time: '昨天'
+      }
+    ];
+
+    // ------------------------------
+    // 状态
+    // ------------------------------
+    const state = {
+      currentTab: 'discover', // discover | circles | messages | profile
+      activeCircleId: null,   // null 表示不在圈子详情
+      circleSubTab: 'forum',  // forum | chat | events (仅加入后视角)
+      joinedCircles: new Set([]), // 默认未加入：方便直接体验“入圈验证”
+      showQuiz: false,
+      quizStep: 0,
+      toast: '',
+      toastTimer: null,
+
+      // 消息系统（演示用：按圈子存一套聊天记录）
+      chatByCircle: {
+        guofeng: [
+          { id: 'm1', from: '云中君', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150', text: '欢迎新同好！先自我介绍一下吧？', time: '刚刚' },
+          { id: 'm2', from: '系统', avatar: null, text: '提示：已通过验证即可进入私域论坛与聊天。', time: '刚刚' }
+        ]
+      },
+      messageInputText: '',
+
+      // 本地 Web 增强：持久化资料与交互状态
+      profile: {
+        name: '林晓雨',
+        studentId: '212207154',
+        avatar: null
+      },
+      circleSearchQuery: '',
+
+      // 用户在“论坛”里新增的帖子（持久化）
+      customPostsByCircle: {}, // { [circleId]: Post[] }
+
+      // 点赞/评论等对静态帖子（POSTS）的覆盖（持久化）
+      postOverrides: {}, // { [postId]: { likes: number, comments: number } }
+      postLiked: new Set([]), // { postId: true }
+      postCommentsById: {}, // { [postId]: Comment[] }
+
+      // 模态框（评论/发帖等）
+      modal: null, // { type: 'comment'|'create-post'|'notifications', postId?, circleId? }
+      modalDraftText: '',
+
+      // 活动 RSVP（本地持久化）
+      eventsRsvpByEventId: {}, // { [eventId]: true }
+
+      // 通知已读（本地持久化）
+      notificationReadIds: new Set([]) // Set<notificationId>
+    };
+
+    // ------------------------------
+    // 本地存储（Web 增强）
+    // ------------------------------
+    const STORAGE_KEY = 'circle-web-demo:v1';
+
+    function loadPersistedState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const data = JSON.parse(raw);
+
+        if (Array.isArray(data.joinedCircles)){
+          state.joinedCircles = new Set(data.joinedCircles);
+        }
+        if (data.chatByCircle && typeof data.chatByCircle === 'object'){
+          // 合并：保留内置的默认数据
+          state.chatByCircle = { ...state.chatByCircle, ...data.chatByCircle };
+        }
+        if (data.customPostsByCircle && typeof data.customPostsByCircle === 'object'){
+          state.customPostsByCircle = data.customPostsByCircle;
+        }
+        if (data.postOverrides && typeof data.postOverrides === 'object'){
+          state.postOverrides = data.postOverrides;
+        }
+        if (Array.isArray(data.postLiked)){
+          state.postLiked = new Set(data.postLiked);
+        }
+        if (data.postCommentsById && typeof data.postCommentsById === 'object'){
+          state.postCommentsById = data.postCommentsById;
+        }
+        if (data.profile && typeof data.profile === 'object'){
+          state.profile = { ...state.profile, ...data.profile };
+        }
+        if (typeof data.circleSearchQuery === 'string'){
+          state.circleSearchQuery = data.circleSearchQuery;
+        }
+        if (data.eventsRsvpByEventId && typeof data.eventsRsvpByEventId === 'object'){
+          state.eventsRsvpByEventId = data.eventsRsvpByEventId;
+        }
+        if (Array.isArray(data.notificationReadIds)){
+          state.notificationReadIds = new Set(data.notificationReadIds);
+        }
+      }catch(err){
+        // ignore
+      }
+    }
+
+    function persistState(){
+      try{
+        const data = {
+          joinedCircles: [...state.joinedCircles],
+          chatByCircle: state.chatByCircle,
+          customPostsByCircle: state.customPostsByCircle,
+          postOverrides: state.postOverrides,
+          postLiked: [...state.postLiked],
+          postCommentsById: state.postCommentsById,
+          profile: state.profile,
+          circleSearchQuery: state.circleSearchQuery,
+          eventsRsvpByEventId: state.eventsRsvpByEventId,
+          notificationReadIds: [...state.notificationReadIds]
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }catch(err){
+        // ignore
+      }
+    }
+
+    // ------------------------------
+    // 工具函数
+    // ------------------------------
+    const getCircle = (id) => CIRCLES.find(c => c.id === id);
+    const fmtCircleName = (id) => (getCircle(id)?.name || '未知圈子');
+
+    function getCustomPostsForCircle(circleId){
+      return (state.customPostsByCircle && state.customPostsByCircle[circleId]) ? state.customPostsByCircle[circleId] : [];
+    }
+
+    function getPostsForCircle(circleId){
+      const custom = getCustomPostsForCircle(circleId);
+      const base = POSTS.filter(p => p.circleId === circleId);
+      return [...custom, ...base];
+    }
+
+    function findPostById(postId){
+      const pid = String(postId);
+      const vals = Object.values(state.customPostsByCircle || {});
+      const customAll = [];
+      for (let i = 0; i < vals.length; i++){
+        if (Array.isArray(vals[i])) customAll.push.apply(customAll, vals[i]);
+      }
+      return customAll.find(p => String(p.id) === pid) || POSTS.find(p => String(p.id) === pid) || null;
+    }
+
+    function isPostLiked(postId){
+      return state.postLiked.has(String(postId));
+    }
+
+    function getEffectivePostLikes(post){
+      if (!post) return 0;
+      const pid = String(post.id);
+      const override = state.postOverrides ? state.postOverrides[pid] : null;
+      return (override && typeof override.likes === 'number') ? override.likes : (typeof post.likes === 'number' ? post.likes : 0);
+    }
+
+    function getEffectivePostComments(post){
+      if (!post) return 0;
+      const pid = String(post.id);
+      const override = state.postOverrides ? state.postOverrides[pid] : null;
+      return (override && typeof override.comments === 'number') ? override.comments : (typeof post.comments === 'number' ? post.comments : 0);
+    }
+
+    function getNextPostId(){
+      const baseIds = POSTS.map(p => Number(p.id)).filter(n => Number.isFinite(n));
+      const vals = Object.values(state.customPostsByCircle || {});
+      const customAll = [];
+      for (let i = 0; i < vals.length; i++){
+        if (Array.isArray(vals[i])) customAll.push.apply(customAll, vals[i]);
+      }
+      const customIds = customAll.map(p => Number(p.id)).filter(n => Number.isFinite(n));
+      const maxId = Math.max(-Infinity, ...baseIds, ...customIds);
+      return (maxId === -Infinity) ? 1 : (maxId + 1);
+    }
+
+    function getEventsForCircle(circleId){
+      return EVENTS.filter(e => e.circleId === circleId);
+    }
+
+    function getEventById(eventId){
+      const eid = String(eventId);
+      return EVENTS.find(e => String(e.id) === eid) || null;
+    }
+
+    function isEventRsvp(eventId){
+      return !!(state.eventsRsvpByEventId && state.eventsRsvpByEventId[String(eventId)]);
+    }
+
+    function toggleEventRsvp(eventId){
+      const eid = String(eventId);
+      if (!state.eventsRsvpByEventId) state.eventsRsvpByEventId = {};
+      if (isEventRsvp(eid)){
+        delete state.eventsRsvpByEventId[eid];
+        showToast('已取消报名（本地）');
+      }else{
+        state.eventsRsvpByEventId[eid] = true;
+        showToast('报名成功（本地）');
+      }
+      persistState();
+      render();
+    }
+
+    function getUnreadNotificationCount(){
+      let count = 0;
+      for (let i = 0; i < NOTIFICATIONS.length; i++){
+        const n = NOTIFICATIONS[i];
+        if (!state.notificationReadIds || !state.notificationReadIds.has(n.id)) count++;
+      }
+      return count;
+    }
+
+    function markAllNotificationsRead(){
+      if (!state.notificationReadIds) state.notificationReadIds = new Set([]);
+      for (let i = 0; i < NOTIFICATIONS.length; i++){
+        state.notificationReadIds.add(NOTIFICATIONS[i].id);
+      }
+      persistState();
+      render();
+      showToast('已全部标记为已读');
+    }
+
+    function showToast(msg){
+      state.toast = msg;
+      render(); // 让 toast 出现在 UI 上
+      if (state.toastTimer) clearTimeout(state.toastTimer);
+      state.toastTimer = setTimeout(() => {
+        state.toast = '';
+        render();
+      }, 2000);
+    }
+
+    function handleJoinCircle(circleId){
+      state.joinedCircles.add(circleId);
+      state.showQuiz = false;
+      state.quizStep = 0;
+      state.circleSubTab = 'forum';
+      showToast('验证通过！欢迎加入圈子');
+      persistState();
+      render();
+    }
+
+    function isJoined(circleId){
+      return state.joinedCircles.has(circleId);
+    }
+
+    function nextQuizOrJoin(){
+      const circle = getCircle(state.activeCircleId);
+      if (!circle || !circle.quiz) return;
+      const q = circle.quiz[state.quizStep];
+      if (!q) return;
+      if (state.quizStep < circle.quiz.length - 1){
+        state.quizStep += 1;
+      } else {
+        handleJoinCircle(circle.id);
+      }
+    }
+
+    // ------------------------------
+    // 渲染函数
+    // ------------------------------
+    const root = document.getElementById('appRoot');
+
+    function renderTabBar(){
+      if (!state.activeCircleId && state.showQuiz === false && !state.modal){
+        return `
+          <div class="tab-bar" role="navigation" aria-label="底部导航">
+            <div class="tab-bar-inner">
+              ${renderTab('discover', 'discover', 'fa-house', '首页')}
+              ${renderTab('circles', 'circles', 'fa-compass', '圈子')}
+              ${renderTab('messages', 'messages', 'fa-message-dots', '消息')}
+              ${renderTab('profile', 'profile', 'fa-user', '我的')}
+            </div>
+          </div>
+        `;
+      }
+      return ''; // 在圈子详情或答题弹窗时隐藏底部导航（更贴合私域体验）
+    }
+
+    function renderTab(tabId, key, iconClass, label){
+      const active = state.currentTab === key && !state.activeCircleId;
+      return `
+        <button class="tab ${active ? 'active' : ''}" data-action="switch-tab" data-tab="${key}" role="tab" aria-selected="${active}">
+          <i class="fa-solid ${iconClass}" aria-hidden="true"></i>
+          <span>${label}</span>
+        </button>
+      `;
+    }
+
+    function renderHeaderForMain(){
+      // 圈子详情内部用各自的返回按钮，这里只给主页面
+      if (state.activeCircleId) return '';
+      const unread = getUnreadNotificationCount();
+      return `
+        <header class="topbar top-safe">
+          <div class="brand">
+            <span class="dot" aria-hidden="true"></span>
+            <div class="title">这个圈子</div>
+          </div>
+          <button class="icon-btn" type="button" data-action="open-notifications" aria-label="通知">
+            <i class="fa-solid fa-bell"></i>
+            ${unread > 0 ? `<span style="position:absolute; margin-top:-18px; margin-left:18px; min-width:18px; height:18px; padding:0 5px; border-radius:999px; background: rgba(239,68,68,.16); border:1px solid rgba(239,68,68,.28); color: rgba(220,38,38,.95); font-weight: 1000; font-size: 11px; display:flex; align-items:center; justify-content:center;">${unread > 99 ? '99+' : unread}</span>` : ''}
+          </button>
+        </header>
+      `;
+    }
+
+    function renderDiscoverPanel(){
+      // 首页：hero + 圈子推荐 + 广场热议
+      const rec = CIRCLES.map(circle => {
+        const joined = isJoined(circle.id);
+        return `
+          <div class="circle-item" data-action="open-circle" data-circle-id="${circle.id}">
+            <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+            <div class="circle-meta">
+              <div class="circle-top">
+                <div class="circle-name">${circle.name}</div>
+                ${joined ? (
+                  `<span class="chip good"><i class="fa-solid fa-unlock"></i>已加入</span>`
+                ) : (
+                  `<span class="chip lock"><i class="fa-solid fa-lock"></i>需验证</span>`
+                )}
+              </div>
+              <div class="tag-row">
+                ${(circle.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+              </div>
+              <div class="desc">${circle.desc || ''}</div>
+              <div class="members"><i class="fa-solid fa-user-group"></i> ${circle.members} 名同好</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const hot = POSTS.map(post => {
+        const circleName = fmtCircleName(post.circleId);
+        const likes = getEffectivePostLikes(post);
+        const comments = getEffectivePostComments(post);
+        const liked = isPostLiked(post.id);
+        return `
+          <article class="post-item">
+            <div class="post-head">
+              <img class="avatar" src="${post.avatar}" alt="avatar" loading="lazy" />
+              <div>
+                <div class="author">${post.author}</div>
+                <div class="post-sub">${post.time} · 来自 ${circleName}</div>
+              </div>
+            </div>
+            <div class="post-content">${post.content}</div>
+            <div class="post-actions">
+              <button class="action-btn heart" data-action="post-like" data-post-id="${post.id}">
+                <i class="fa-solid fa-heart" aria-hidden="true" style="color:${liked ? '#fb7185' : 'inherit'}"></i> ${likes}
+              </button>
+              <button class="action-btn comment" data-action="post-comment" data-post-id="${post.id}">
+                <i class="fa-regular fa-message" aria-hidden="true"></i> ${comments}
+              </button>
+              <button class="action-btn" data-action="post-share" data-post-id="${post.id}">
+                <i class="fa-solid fa-share-nodes" aria-hidden="true"></i> 转发
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      const joinedCircles = [...state.joinedCircles];
+      const preferredEvents = (joinedCircles.length
+        ? EVENTS.filter(e => joinedCircles.includes(e.circleId))
+        : EVENTS
+      ).slice(0, 3);
+
+      const announcementA = NOTIFICATIONS[0];
+      const announcementB = NOTIFICATIONS[1];
+
+      return `
+        <section class="panel active" id="panel-discover" aria-label="首页">
+          <div class="hero">
+            <h1>这个圈子</h1>
+            <div class="sub">始于兴趣 · 合于验证 · 久于同频</div>
+            <div class="hero-row">
+              <div class="hero-info">
+                <div class="k"><i class="fa-solid fa-shield-halved"></i> 轻门槛验证机制</div>
+                <div class="v">告别“进群即死”，找到懂你的同好</div>
+              </div>
+              <button class="cta" type="button" data-action="open-guideline">了解更多</button>
+            </div>
+          </div>
+
+          <div class="section-title">
+            <h2><i class="fa-solid fa-compass"></i> 为你推荐圈子</h2>
+            <div class="link" data-action="switch-tab" data-tab="circles">查看全部</div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:12px;">${rec}</div>
+
+          <div class="section-title" style="margin-top: 22px;">
+            <h2><i class="fa-solid fa-bolt"></i> 快捷入口</h2>
+            <div class="link" style="cursor:default">本地 Web 增强</div>
+          </div>
+          <div class="grid" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+            <div class="card card-pad" style="border-radius: 18px;">
+              <div style="font-weight:1000; font-size: 14px; margin-bottom: 6px;"><i class="fa-solid fa-message"></i> 消息</div>
+              <div style="color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 12px;">进入私域聊天演示。</div>
+              <button class="action-btn" style="width:100%; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65);" data-action="switch-tab" data-tab="messages">
+                <i class="fa-solid fa-arrow-right"></i> 去消息
+              </button>
+            </div>
+            <div class="card card-pad" style="border-radius: 18px;">
+              <div style="font-weight:1000; font-size: 14px; margin-bottom: 6px;"><i class="fa-solid fa-layer-group"></i> 我的圈子</div>
+              <div style="color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 12px;">查看已加入与我的活动。</div>
+              <button class="action-btn" style="width:100%; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65);" data-action="switch-tab" data-tab="profile">
+                <i class="fa-solid fa-arrow-right"></i> 去个人
+              </button>
+            </div>
+          </div>
+
+          <div class="card card-pad" style="border-radius: 18px;">
+            <div style="font-weight:1000; font-size: 14px; margin-bottom: 6px;"><i class="fa-solid fa-pen-nib"></i> 快速发帖</div>
+            <div style="color: var(--muted); font-size: 12px; line-height: 1.6; margin-bottom: 12px;">选择你加入的圈子发布内容（本地保存）。</div>
+            <button
+              class="action-btn"
+              style="width:100%; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65);"
+              type="button"
+              data-action="quick-create-post"
+            >
+              <i class="fa-solid fa-arrow-right"></i> 立即发帖
+            </button>
+          </div>
+
+          <div class="section-title" style="margin-top: 22px;">
+            <h2><i class="fa-solid fa-calendar-days" style="color: rgba(217,119,6,.98)"></i> 活动推荐</h2>
+            <div class="link" style="cursor:default">${preferredEvents.length} 个</div>
+          </div>
+          ${preferredEvents.length ? `
+            <div class="grid" style="grid-template-columns: repeat(3, minmax(0,1fr));">
+              ${preferredEvents.map(e => {
+                const rsvp = isEventRsvp(e.id);
+                return `
+                  <div class="card card-pad" style="border-radius: 18px;">
+                    <div style="font-weight:1000; font-size: 14px; margin-bottom: 6px;">${escapeHtml(e.title)}</div>
+                    <div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
+                      <div>时间：${escapeHtml(e.time)}</div>
+                      <div>地点：${escapeHtml(e.location)}</div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top: 12px;">
+                      <span class="chip badge" style="background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92);">
+                        <i class="fa-regular fa-tag" style="margin-right:6px;"></i>${escapeHtml(e.tag)}
+                      </span>
+                      <button class="action-btn" style="flex: 0; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65); padding: 10px 12px;" data-action="event-rsvp-toggle" data-event-id="${escapeHtml(e.id)}">
+                        <i class="fa-solid ${rsvp ? 'fa-xmark' : 'fa-circle-check'}"></i> ${rsvp ? '取消' : '报名'}
+                      </button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          ` : `
+            <div class="card card-pad" style="color: var(--muted);">暂无活动推荐。</div>
+          `}
+
+          <div class="section-title" style="margin-top: 22px;">
+            <h2><i class="fa-solid fa-bullhorn" style="color: rgba(79,70,229,.98)"></i> 系统公告</h2>
+            <div class="link" data-action="open-notifications">查看全部</div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            ${announcementA ? `
+              <div class="card card-pad" style="border-radius: 18px;">
+                <div style="font-weight:1000; font-size:14px; margin-bottom:6px;">${escapeHtml(announcementA.title)}</div>
+                <div style="color: var(--muted); font-size: 12px; line-height:1.7; white-space: pre-wrap;">${escapeHtml(announcementA.body)}</div>
+              </div>
+            ` : ''}
+            ${announcementB ? `
+              <div class="card card-pad" style="border-radius: 18px;">
+                <div style="font-weight:1000; font-size:14px; margin-bottom:6px;">${escapeHtml(announcementB.title)}</div>
+                <div style="color: var(--muted); font-size: 12px; line-height:1.7; white-space: pre-wrap;">${escapeHtml(announcementB.body)}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <div class="section-title" style="margin-top: 22px;">
+            <h2><i class="fa-solid fa-fire" style="color:#fb7185"></i> 广场热议</h2>
+          </div>
+          <div>${hot}</div>
+        </section>
+      `;
+    }
+
+    function renderCirclesPanel(){
+      const joinedCount = state.joinedCircles.size;
+      const q = (state.circleSearchQuery || '').trim().toLowerCase();
+      const filteredCircles = CIRCLES.filter(circle => {
+        if (!q) return true;
+        const blob = [
+          circle.name,
+          (circle.tags || []).join(' '),
+          circle.desc || ''
+        ].join(' ').toLowerCase();
+        return blob.includes(q);
+      });
+      const list = filteredCircles.map(circle => {
+          const joined = isJoined(circle.id);
+          return `
+            <div class="circle-item" data-action="open-circle" data-circle-id="${circle.id}">
+              <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+              <div class="circle-meta">
+                <div class="circle-top">
+                  <div class="circle-name">${circle.name}</div>
+                  ${joined ? (
+                    `<span class="chip good"><i class="fa-solid fa-unlock"></i>已加入</span>`
+                  ) : (
+                    `<span class="chip lock"><i class="fa-solid fa-lock"></i>需验证</span>`
+                  )}
+                </div>
+                <div class="tag-row">
+                  ${(circle.tags || []).map(t => `<span class="tag">${t}</span>`).join('')}
+                </div>
+                <div class="desc">${circle.desc || ''}</div>
+                <div class="members"><i class="fa-solid fa-user-group"></i> ${circle.members} 名同好</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      return `
+        <section class="panel active" id="panel-circles" aria-label="圈子">
+          <div class="section-title">
+            <h2><i class="fa-solid fa-compass"></i> 圈子广场</h2>
+            <div class="link" style="cursor:default">已加入 ${joinedCount} 个</div>
+          </div>
+          <div style="margin: 0 2px 12px;">
+            <input
+              type="text"
+              data-role="circle-search"
+              aria-label="搜索圈子"
+              placeholder="搜索圈子/标签/描述…"
+              value="${escapeHtml(state.circleSearchQuery)}"
+              style="width:100%; border-radius: 16px; border: 1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65); color: rgba(15,23,42,.92); padding: 12px 12px; outline:none; font-size: 13px;"
+            />
+            <div style="color: var(--muted); font-size: 12px; margin-top: 8px; line-height: 1.5;">
+              ${q ? `已筛选：包含“${escapeHtml(state.circleSearchQuery)}”的 ${filteredCircles.length} 个条目。` : '输入关键字可快速筛选圈子列表。'}
+            </div>
+          </div>
+          <div>${list}</div>
+        </section>
+      `;
+    }
+
+    function renderMessagesPanel(){
+      const joined = [...state.joinedCircles];
+      if (joined.length === 0){
+        return `
+          <section class="panel active" id="panel-messages" aria-label="消息">
+            <div class="card card-pad" style="margin-top:8px;">
+              <div style="display:flex; align-items:center; gap:12px;">
+                <i class="fa-solid fa-box-open" style="font-size:40px; color: rgba(167,139,250,.95)"></i>
+                <div>
+                  <div style="font-weight:1000; margin-bottom:6px;">消息列表空空如也</div>
+                  <div style="color: var(--muted); font-size:13px; line-height:1.5;">先去“圈子”通过轻门槛验证加入一个圈子吧。</div>
+                  <div style="margin-top:12px;">
+                    <button class="cta" type="button" data-action="switch-tab" data-tab="circles">去加入圈子</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        `;
+      }
+
+      const circleButtons = joined.map(cid => {
+        const circle = getCircle(cid);
+        const last = (state.chatByCircle[cid] && state.chatByCircle[cid][state.chatByCircle[cid].length - 1]) || null;
+        const lastText = last ? last.text : '暂无消息';
+        return `
+          <div class="circle-item" style="padding:12px;" data-action="open-chat" data-circle-id="${cid}">
+            <img class="circle-cover" style="width:56px;height:56px;border-radius:16px;" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+            <div class="circle-meta">
+              <div class="circle-top">
+                <div class="circle-name">${circle.name}</div>
+                <span class="chip badge"><i class="fa-regular fa-clock"></i> 置顶</span>
+              </div>
+              <div class="desc" style="max-width: 240px;">${lastText}</div>
+              <div class="members"><i class="fa-solid fa-comments"></i> 点击进入聊天</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const activeChatCircleId = state.chatContext && state.chatContext.circleId;
+      if (!activeChatCircleId){
+        return `
+          <section class="panel active" id="panel-messages" aria-label="消息">
+            <div class="section-title">
+              <h2><i class="fa-solid fa-message-dots"></i> 私域消息</h2>
+            </div>
+            <div>${circleButtons}</div>
+          </section>
+        `;
+      }
+
+      const circle = getCircle(activeChatCircleId);
+      const msgs = state.chatByCircle[activeChatCircleId] || [];
+      return `
+        <section class="panel active" id="panel-messages" aria-label="消息详情">
+          <div class="card card-pad" style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <button class="icon-btn" type="button" data-action="back-to-message-list" aria-label="返回列表" style="width:40px;height:40px;">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div style="min-width:0;">
+                <div style="font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${circle.name}</div>
+                <div style="color: var(--muted); font-size: 12px; margin-top:4px;">聊天演示：本地消息，不会上传</div>
+              </div>
+            </div>
+            <span class="chip good"><i class="fa-solid fa-shield-halved"></i> 已验证</span>
+          </div>
+
+          <div class="msg-list">
+            ${msgs.map(m => {
+              const isMe = m.from === '我';
+              const avatarHtml = isMe ? '' : (m.avatar ? `<img class="avatar" src="${m.avatar}" alt="" style="width:28px;height:28px;">` : `<div class="avatar" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`);
+              return `
+                <div class="msg-row ${isMe ? 'me' : ''}">
+                  ${isMe ? '' : avatarHtml}
+                  <div>
+                    <div class="msg-bubble">${escapeHtml(m.text)}</div>
+                    <div class="msg-meta">${m.time || ''}</div>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="composer">
+            <form data-action="send-message" data-circle-id="${activeChatCircleId}">
+              <textarea class="input" name="message" rows="1" placeholder="输入消息…"></textarea>
+              <button class="send-btn" type="submit" aria-label="发送"><i class="fa-solid fa-paper-plane"></i></button>
+            </form>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderProfilePanel(){
+      const joined = [...state.joinedCircles];
+      const myEvents = EVENTS.filter(e => state.eventsRsvpByEventId && state.eventsRsvpByEventId[String(e.id)]);
+      return `
+        <section class="panel active" id="panel-profile" aria-label="我的">
+          <div class="card card-pad" style="margin-top:6px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="avatar" style="width:52px;height:52px; border-radius:18px; display:flex; align-items:center; justify-content:center; background: rgba(255,255,255,.08);">
+                <i class="fa-solid fa-user" style="font-size: 22px; color: rgba(167,139,250,.98)"></i>
+              </div>
+              <div style="flex:1; min-width:0;">
+                <div style="font-weight:1000; font-size: 16px;">林晓雨</div>
+                <div style="color: var(--muted); font-size: 12px; margin-top:4px;">学号：212207154 · 本地演示账户</div>
+              </div>
+              <span class="chip badge"><i class="fa-solid fa-lock"></i> 私域已启用</span>
+            </div>
+            <div style="margin-top: 12px; display:flex; gap: 10px; flex-wrap: wrap;">
+              <span class="chip good"><i class="fa-solid fa-unlock"></i> 已加入 ${joined.length} 个</span>
+              <span class="chip"><i class="fa-solid fa-wand-magic-sparkles"></i> 轻门槛验证</span>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top: 18px;">
+            <h2><i class="fa-solid fa-layer-group"></i> 我的圈子</h2>
+            <div class="link" data-action="switch-tab" data-tab="circles">去探索</div>
+          </div>
+
+          ${joined.length === 0 ? `
+            <div class="card card-pad" style="margin-top:10px; color: var(--muted);">
+              你还没有加入任何圈子。通过验证后即可解锁私域论坛与聊天。
+            </div>
+          ` : `
+            <div style="display:flex; flex-direction:column; gap:12px;">
+              ${joined.map(cid => {
+                const circle = getCircle(cid);
+                return `
+                  <div class="circle-item" style="padding:12px;">
+                    <img class="circle-cover" style="width:56px;height:56px;border-radius:16px;" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+                    <div class="circle-meta">
+                      <div class="circle-top">
+                        <div class="circle-name">${circle.name}</div>
+                        <span class="chip good"><i class="fa-solid fa-check"></i> 已加入</span>
+                      </div>
+                      <div class="desc">${circle.desc}</div>
+                      <div style="display:flex; gap:10px; margin-top:10px;">
+                        <button class="action-btn" style="flex:0; padding:10px 12px; border:1px solid rgba(255,255,255,.10); background: rgba(255,255,255,.06);" data-action="open-circle" data-circle-id="${circle.id}">
+                          <i class="fa-solid fa-arrow-right"></i> 进入
+                        </button>
+                        <button class="action-btn" style="flex:0; padding:10px 12px; border:1px solid rgba(239,68,68,.28); background: rgba(239,68,68,.10); color: rgba(254,202,202,.95);" data-action="leave-circle" data-circle-id="${circle.id}">
+                          <i class="fa-solid fa-xmark"></i> 退出
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          `}
+
+          <div class="section-title" style="margin-top: 20px;">
+            <h2><i class="fa-solid fa-calendar-days"></i> 我的活动</h2>
+            <div class="link" style="cursor:default">${myEvents.length} 个</div>
+          </div>
+
+          ${myEvents.length === 0 ? `
+            <div class="card card-pad" style="margin-top: 10px; color: var(--muted);">
+              你还没有报名任何活动。去“圈子-活动组织”点击报名即可（本地演示，刷新不会丢）。
+            </div>
+          ` : `
+            <div class="grid" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+              ${myEvents.slice(0, 6).map(e => `
+                <div class="card card-pad" style="border-radius: 18px;">
+                  <div style="font-weight:1000; font-size: 14px; margin-bottom: 6px;">${escapeHtml(e.title)}</div>
+                  <div style="color: var(--muted); font-size: 12px; line-height: 1.6;">
+                    <div>时间：${escapeHtml(e.time)}</div>
+                    <div>地点：${escapeHtml(e.location)}</div>
+                  </div>
+                  <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top: 12px;">
+                    <span class="chip lock" style="background: rgba(124,58,237,.10); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92);">
+                      <i class="fa-regular fa-clock"></i> ${escapeHtml(e.tag)}
+                    </span>
+                    <button
+                      class="action-btn"
+                      style="flex: 0; border: 1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65); padding: 10px 12px;"
+                      data-action="event-rsvp-toggle"
+                      data-event-id="${escapeHtml(e.id)}"
+                    >
+                      <i class="fa-solid fa-xmark"></i> 取消
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `}
+        </section>
+      `;
+    }
+
+    function renderCircleDetail(){
+      const circle = getCircle(state.activeCircleId);
+      if (!circle) return '';
+      const joined = isJoined(circle.id);
+      if (!joined){
+        // 外部视角：文化介绍与黑话科普 + 预热作品 + 验证按钮
+        return `
+          <section class="panel active" aria-label="圈子详情">
+            <div style="padding: 0 16px;">
+              <div class="circle-cover-wrap">
+                <img src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+                <button class="circle-back" type="button" data-action="close-circle" aria-label="返回">
+                  <i class="fa-solid fa-arrow-left"></i>
+                </button>
+                <div class="circle-head">
+                  <div class="circle-badges">
+                    <span class="chip lock"><i class="fa-solid fa-lock"></i> 私密社群</span>
+                    <span class="chip"><i class="fa-solid fa-user-group"></i> ${circle.members} 人</span>
+                  </div>
+                  <h1>${circle.name}</h1>
+                  <p>${circle.desc}</p>
+                </div>
+              </div>
+            </div>
+
+            <main style="padding: 0 16px 110px;">
+              <div class="module">
+                <h2><i class="fa-solid fa-book-open" style="color: rgba(167,139,250,.98)"></i> 入圈指南：这是个怎样的圈子？</h2>
+                <div class="box">
+                  这里是纯粹的兴趣聚集地。我们拒绝广告、拒绝水军。为了保持社区的氛围，
+                  每一位想加入的新成员都需要通过一个 <b style="color: #ddd6fe;">轻门槛验证</b>。不用担心，
+                  如果你真心热爱，这些题一定难不倒你！
+                </div>
+              </div>
+
+              ${circle.jargons && circle.jargons.length ? `
+                <div class="module">
+                  <h2><i class="fa-solid fa-wand-magic-sparkles" style="color: rgba(251,191,36,.98)"></i> 萌新必看：圈内“黑话”词典</h2>
+                  <div class="grid">
+                    ${circle.jargons.map(j => `
+                      <div class="card card-pad" style="border-radius:18px; background: rgba(255,255,255,.06);">
+                        <div style="font-weight:1000; color: rgba(167,139,250,.98); margin-bottom:8px;">${j.word}</div>
+                        <div style="color: var(--muted); font-size: 13px; line-height: 1.55;">${j.meaning}</div>
+                      </div>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+
+              <div class="module" style="margin-bottom: 30px;">
+                <h2><i class="fa-solid fa-image" style="color: rgba(232,121,249,.98)"></i> 圈内精彩前瞻</h2>
+                <div class="preview-row">
+                  ${[1,2,3].map(i => {
+                    const url = 'https://images.unsplash.com/photo-' + (1500000000000 + i*10000) + '?auto=format&fit=crop&q=80&w=800';
+                    return `
+                      <div class="preview-thumb">
+                        <img src="${url}" alt="preview" loading="lazy" />
+                        <div class="preview-lock"><i class="fa-solid fa-lock"></i></div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+            </main>
+
+            <div class="bottom-cta">
+              <button class="btn" type="button" data-action="verify-join" data-circle-id="${circle.id}">
+                <i class="fa-solid fa-shield-halved"></i> 立即验证加入圈子
+              </button>
+            </div>
+          </section>
+        `;
+      }
+
+      // 加入后视角：私域论坛 & 聊天 & 活动
+      const posts = getPostsForCircle(circle.id);
+      const circleEvents = getEventsForCircle(circle.id);
+      const chatMsgs = state.chatByCircle[circle.id] || [];
+      return `
+        <section class="panel active" aria-label="私域圈子">
+          <header class="topbar top-safe" style="position: sticky; top: 0;">
+            <div class="brand">
+              <button class="icon-btn" type="button" data-action="close-circle" aria-label="返回" style="width:40px;height:40px;">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div class="title" style="max-width: 220px;">${circle.name}</div>
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <button class="icon-btn" type="button" data-action="search-demo" aria-label="搜索演示">
+                <i class="fa-solid fa-magnifying-glass"></i>
+              </button>
+              <span class="chip good"><i class="fa-solid fa-unlock"></i> 已验证</span>
+            </div>
+          </header>
+
+          <main style="padding-top: 16px;">
+            <div class="card card-pad" style="margin-bottom: 12px; background: rgba(79,70,229,.12); border-color: rgba(124,58,237,.26);">
+              <div style="display:flex; align-items:flex-start; gap:12px;">
+                <div style="width:40px;height:40px; border-radius:16px; background: rgba(124,58,237,.18); border:1px solid rgba(124,58,237,.30); display:flex; align-items:center; justify-content:center;">
+                  <i class="fa-solid fa-wand-magic-sparkles" style="color: rgba(255,255,255,.95)"></i>
+                </div>
+                <div>
+                  <div style="font-weight:1000; margin-bottom:6px;">欢迎来到 ${circle.name}！</div>
+                  <div style="color: var(--muted); font-size:13px; line-height:1.55;">
+                    这里都是验证通过的同好，尽情交流吧。
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="subtabs" role="tablist" aria-label="圈子子模块">
+              <button class="subtab ${state.circleSubTab === 'forum' ? 'active' : ''}" data-action="switch-circle-subtab" data-subtab="forum">
+                <i class="fa-regular fa-comments" style="margin-right:8px;"></i> 圈子论坛
+              </button>
+              <button class="subtab ${state.circleSubTab === 'chat' ? 'active' : ''}" data-action="switch-circle-subtab" data-subtab="chat">
+                <i class="fa-solid fa-comment-dots" style="margin-right:8px;"></i> 社群聊天室
+                <span style="margin-left:8px; font-size:10px; background: rgba(239,68,68,.16); border:1px solid rgba(239,68,68,.28); padding:2px 8px; border-radius:999px; color: rgba(254,202,202,.95);">99+</span>
+              </button>
+              <button class="subtab ${state.circleSubTab === 'events' ? 'active' : ''}" data-action="switch-circle-subtab" data-subtab="events">
+                <i class="fa-regular fa-calendar" style="margin-right:8px;"></i> 活动组织
+              </button>
+            </div>
+
+            ${state.circleSubTab === 'forum' ? `
+              ${posts.length ? `
+                <div style="display:flex; flex-direction:column; gap:12px;">
+                  ${posts.map(post => {
+                    const likes = getEffectivePostLikes(post);
+                    const comments = getEffectivePostComments(post);
+                    const liked = isPostLiked(post.id);
+                    const avatarHtml = post.avatar
+                      ? `<img class="avatar" src="${post.avatar}" alt="avatar" loading="lazy" />`
+                      : `<div class="avatar" style="display:flex;align-items:center;justify-content:center; color: rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`;
+                    return `
+                      <article class="post-item">
+                        <div class="post-head">
+                          ${avatarHtml}
+                          <div>
+                            <div class="author">${post.author}</div>
+                            <div class="post-sub">${post.time}</div>
+                          </div>
+                        </div>
+                        <div class="post-content">${post.content}</div>
+                        <div class="post-actions">
+                          <button class="action-btn" data-action="circle-post-share" data-post-id="${post.id}">
+                            <i class="fa-solid fa-share-nodes"></i> 转发
+                          </button>
+                          <button class="action-btn comment" data-action="circle-post-comment" data-post-id="${post.id}">
+                            <i class="fa-regular fa-message"></i> ${comments}
+                          </button>
+                          <button class="action-btn heart" data-action="circle-post-like" data-post-id="${post.id}">
+                            <i class="fa-solid fa-heart" style="color:${liked ? '#fb7185' : 'inherit'}"></i> ${likes}
+                          </button>
+                        </div>
+                      </article>
+                    `;
+                  }).join('')}
+                </div>
+              ` : `
+                <div class="card card-pad" style="color: var(--muted);">
+                  暂时还没有帖子。点击下方“发帖”试试吧（发布内容会保存到本地）。
+                </div>
+              `}
+
+              <div style="height: 20px;"></div>
+              <div class="card card-pad" style="border-radius: 18px; padding: 14px; display:flex; align-items:center; justify-content:space-between; gap: 12px; background: rgba(255,255,255,.06);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <i class="fa-solid fa-pen-nib" style="font-size:20px; color: rgba(167,139,250,.98);"></i>
+                  <div>
+                    <div style="font-weight:1000; font-size:13px;">发帖</div>
+                    <div style="color: var(--muted); font-size:12px; margin-top:4px;">发布内容会保存到本地浏览器，并在本圈子里展示。</div>
+                  </div>
+                </div>
+                <button class="cta" type="button" data-action="fab-create-post">立即发帖</button>
+              </div>
+            ` : ''}
+
+            ${state.circleSubTab === 'chat' ? `
+              <div class="card card-pad" style="margin-bottom: 12px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-comment-dots" style="color: rgba(167,139,250,.98); font-size:20px;"></i>
+                    <div>
+                      <div style="font-weight:1000; font-size:14px;">${circle.name} 聊天室</div>
+                      <div style="color: var(--muted); font-size:12px; margin-top:4px;">已保存到本地浏览器</div>
+                    </div>
+                  </div>
+                  <span class="chip badge"><i class="fa-solid fa-shield-halved"></i> 私密对话</span>
+                </div>
+              </div>
+
+              <div class="msg-list">
+                ${chatMsgs.map(m => {
+                  const isMe = m.from === '我';
+                  const avatarHtml = isMe ? '' : (m.avatar ? `<img class="avatar" src="${m.avatar}" alt="" style="width:28px;height:28px;">` : `<div class="avatar" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`);
+                  return `
+                    <div class="msg-row ${isMe ? 'me' : ''}">
+                      ${isMe ? '' : avatarHtml}
+                      <div>
+                        <div class="msg-bubble">${escapeHtml(m.text)}</div>
+                        <div class="msg-meta">${m.time || ''}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="composer">
+                <form data-action="send-message" data-circle-id="${circle.id}">
+                  <textarea class="input" name="message" rows="1" placeholder="输入消息…"></textarea>
+                  <button class="send-btn" type="submit" aria-label="发送"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+              </div>
+            ` : ''}
+
+            ${state.circleSubTab === 'events' ? `
+              <div class="card card-pad" style="margin-bottom: 12px;">
+                <div style="font-weight:1000; margin-bottom:8px; display:flex; align-items:center; gap:10px;">
+                  <i class="fa-regular fa-calendar" style="color: rgba(217,119,6,.98)"></i> 活动组织
+                </div>
+                <div style="color: var(--muted); line-height:1.65; font-size:13px;">
+                  点击报名/取消报名（本地演示），并在“我的活动”里查看。
+                </div>
+              </div>
+              ${circleEvents.length ? `
+                <div class="grid" style="grid-template-columns: repeat(2, minmax(0,1fr));">
+                  ${circleEvents.map(e => {
+                    const rsvp = isEventRsvp(e.id);
+                    return `
+                      <div class="card card-pad" style="border-radius: 18px; background: rgba(255,255,255,.55); border-color: ${rsvp ? 'rgba(124,58,237,.26)' : 'rgba(2,6,23,.10)'};">
+                        <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                          <div style="min-width:0;">
+                            <div style="font-weight:1000; font-size:14px; margin-bottom:6px;">${escapeHtml(e.title)}</div>
+                            <div style="color: var(--muted); font-size:12px; line-height:1.6;">
+                              <div>时间：${escapeHtml(e.time)}</div>
+                              <div>地点：${escapeHtml(e.location)}</div>
+                            </div>
+                          </div>
+                          <span class="chip badge" style="font-size:11px; padding:5px 9px; background: rgba(124,58,237,.12); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92);">
+                            <i class="fa-regular fa-tag" style="margin-right:6px;"></i>${escapeHtml(e.tag)}
+                          </span>
+                        </div>
+                        <div style="margin-top:12px;">
+                          <button
+                            class="action-btn"
+                            style="width:100%; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65);"
+                            data-action="event-rsvp-toggle"
+                            data-event-id="${escapeHtml(e.id)}"
+                          >
+                            <i class="fa-solid ${rsvp ? 'fa-xmark' : 'fa-circle-check'}"></i>
+                            ${rsvp ? '取消报名' : '点击报名'}
+                          </button>
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : `
+                <div class="card card-pad" style="color: var(--muted);">
+                  这里暂时没有活动。
+                </div>
+              `}
+            ` : ''}
+          </main>
+        </section>
+      `;
+    }
+
+    function renderQuizModal(){
+      if (!state.activeCircleId || !state.showQuiz) return '';
+      const circle = getCircle(state.activeCircleId);
+      if (!circle || !circle.quiz || !circle.quiz.length) return '';
+      const q = circle.quiz[state.quizStep];
+      return `
+        <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="入圈验证">
+          <div class="modal">
+            <div class="modal-head">
+              <button class="modal-close" type="button" data-action="close-quiz" aria-label="关闭">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <h3>入圈验证</h3>
+              <p>完成测试即可解锁圈内专属论坛与群聊</p>
+            </div>
+            <div class="modal-body">
+              <div class="q-progress">
+                <div class="progress-pill">Question ${state.quizStep + 1}/${circle.quiz.length}</div>
+                <div class="progress-dots">
+                  ${circle.quiz.map((_, idx) => `<div class="dot ${idx <= state.quizStep ? 'on' : ''}"></div>`).join('')}
+                </div>
+              </div>
+              <div class="q-text">${q.question}</div>
+              <div class="opt-list">
+                ${q.options.map((opt, idx) => `
+                  <button class="opt" type="button" data-action="quiz-answer" data-answer-index="${idx}">
+                    ${opt}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCommentModal(){
+      if (!state.modal || state.modal.type !== 'comment') return '';
+      const post = findPostById(state.modal.postId);
+      if (!post) return '';
+
+      const postId = String(post.id);
+      const likes = getEffectivePostLikes(post);
+      const commentsCount = getEffectivePostComments(post);
+      const comments = state.postCommentsById && state.postCommentsById[postId] ? state.postCommentsById[postId] : [];
+
+      return `
+        <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="评论帖子">
+          <div class="modal">
+            <div class="modal-head">
+              <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <h3>评论帖子</h3>
+              <p>${escapeHtml(post.author)} · 点赞 ${likes} · 评论 ${commentsCount}</p>
+            </div>
+            <div class="modal-body">
+              <div style="display:flex; flex-direction:column; gap:10px; max-height: 220px; overflow:auto; padding-right: 2px;">
+                ${comments.length ? comments.map(c => `
+                  <div class="card card-pad" style="border-radius: 16px; background: rgba(255,255,255,.65); border-color: rgba(2,6,23,.10);">
+                    <div style="font-weight: 1000; font-size: 13px;">${escapeHtml(c.author || '匿名')}</div>
+                    <div style="color: var(--muted); font-size: 12px; margin-top: 4px;">${escapeHtml(c.time || '')}</div>
+                    <div style="color: rgba(15,23,42,.88); font-size: 13px; line-height: 1.6; margin-top: 8px; white-space: pre-wrap;">
+                      ${escapeHtml(c.text || '')}
+                    </div>
+                  </div>
+                `).join('') : `
+                  <div style="color: var(--muted); font-size: 13px; line-height: 1.6;">
+                    暂无评论，先来抢占沙发吧。
+                  </div>
+                `}
+              </div>
+
+              <div style="margin-top: 14px;">
+                <form data-action="submit-comment" data-post-id="${postId}">
+                  <textarea class="input" name="comment" rows="3" placeholder="输入评论内容…"></textarea>
+                  <div style="display:flex; gap:10px; margin-top: 14px;">
+                    <button class="cta" type="button" data-action="close-modal" style="flex: 1; background: rgba(255,255,255,.78); color: rgba(15,23,42,.92); box-shadow: none;">
+                      取消
+                    </button>
+                    <button class="cta" type="submit" style="flex: 1;">
+                      发送
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCreatePostModal(){
+      if (!state.modal || state.modal.type !== 'create-post') return '';
+      const circle = getCircle(state.modal.circleId);
+      if (!circle) return '';
+
+      return `
+        <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="发帖">
+          <div class="modal">
+            <div class="modal-head">
+              <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <h3>发帖</h3>
+              <p>发布到：${escapeHtml(circle.name)}</p>
+            </div>
+            <div class="modal-body">
+              <form data-action="submit-create-post" data-circle-id="${escapeHtml(circle.id)}">
+                <textarea
+                  class="input"
+                  name="postContent"
+                  rows="5"
+                  placeholder="输入你的内容…（支持换行）"
+                ></textarea>
+                <div style="display:flex; gap:10px; margin-top: 14px;">
+                  <button class="cta" type="button" data-action="close-modal" style="flex: 1; background: rgba(255,255,255,.78); color: rgba(15,23,42,.92); box-shadow: none;">
+                    取消
+                  </button>
+                  <button class="cta" type="submit" style="flex: 1;">
+                    发布
+                  </button>
+                </div>
+              </form>
+              <div style="color: var(--muted); font-size: 12px; line-height: 1.6; margin-top: 12px;">
+                内容只保存在本地浏览器（演示 Web 版功能增强）。
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderNotificationsModal(){
+      if (!state.modal || state.modal.type !== 'notifications') return '';
+
+      const unread = NOTIFICATIONS.filter(n => !(state.notificationReadIds && state.notificationReadIds.has(n.id)));
+      return `
+        <div class="modal-overlay" role="dialog" aria-modal="true" aria-label="通知">
+          <div class="modal" style="max-width: 420px;">
+            <div class="modal-head">
+              <button class="modal-close" type="button" data-action="close-modal" aria-label="关闭">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+              <h3>通知中心</h3>
+              <p>${unread.length ? `你有 ${unread.length} 条未读` : '全部已读'}</p>
+            </div>
+            <div class="modal-body">
+              <div style="display:flex; gap:10px; margin-bottom: 14px;">
+                <button class="cta" type="button" data-action="mark-all-notifications-read" style="flex: 1; background: rgba(79,70,229,.12); color: rgba(76,29,149,.95); box-shadow:none;">
+                  全部标记为已读
+                </button>
+              </div>
+
+              <div style="display:flex; flex-direction:column; gap:10px; max-height: 340px; overflow:auto; padding-right: 2px;">
+                ${NOTIFICATIONS.map(n => {
+                  const isRead = state.notificationReadIds && state.notificationReadIds.has(n.id);
+                  return `
+                    <div class="card card-pad" style="border-radius: 16px; padding: 14px; background: ${isRead ? 'rgba(255,255,255,.50)' : 'rgba(124,58,237,.10)'}; border-color: ${isRead ? 'rgba(2,6,23,.10)' : 'rgba(124,58,237,.25)'};">
+                      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px;">
+                        <div style="min-width:0;">
+                          <div style="font-weight:1000; font-size: 13px; color: rgba(15,23,42,.92);">${escapeHtml(n.title)}</div>
+                          <div style="color: var(--muted); font-size: 12px; margin-top: 6px; line-height: 1.6; white-space: pre-wrap;">${escapeHtml(n.body)}</div>
+                        </div>
+                        <div style="flex-shrink:0; color: var(--muted2); font-size: 11px; text-align:right;">
+                          <div>${escapeHtml(n.time || '')}</div>
+                          ${isRead ? '' : `<div style="margin-top:6px; display:inline-flex; padding: 4px 8px; border-radius: 999px; background: rgba(239,68,68,.12); border: 1px solid rgba(239,68,68,.22); color: rgba(220,38,38,.95); font-weight:1000;">新</div>`}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    function render(){
+      const topbar = renderHeaderForMain();
+
+      const discoverPanel = renderDiscoverPanel();
+      const circlesPanel = renderCirclesPanel();
+      const messagesPanel = renderMessagesPanel();
+      const profilePanel = renderProfilePanel();
+
+      const circleDetail = state.activeCircleId ? renderCircleDetail() : '';
+      const showDiscover = !state.activeCircleId && state.currentTab === 'discover';
+      const showCircles = !state.activeCircleId && state.currentTab === 'circles';
+      const showMessages = !state.activeCircleId && state.currentTab === 'messages';
+      const showProfile = !state.activeCircleId && state.currentTab === 'profile';
+
+      // 主面板的 active 状态由 panel 结构自身控制；这里通过 panel.active 做最终展示
+      // 由于 renderDiscoverPanel 返回的是 panel.active，下面做兼容处理：只拼入当前需要的面板。
+      let mainPanels = '';
+      if (showDiscover) mainPanels += discoverPanel;
+      if (showCircles) mainPanels += circlesPanel;
+      if (showMessages) mainPanels += messagesPanel;
+      if (showProfile) mainPanels += profilePanel;
+
+      const quizModal = renderQuizModal();
+      const commentModal = renderCommentModal();
+      const createPostModal = renderCreatePostModal();
+      const notificationsModal = renderNotificationsModal();
+      const tabBar = renderTabBar();
+
+      const toastHtml = state.toast ? `
+        <div class="toast">
+          <i class="fa-solid fa-circle-check" style="color:#34d399"></i>
+          ${escapeHtml(state.toast)}
+        </div>
+      ` : '';
+
+      root.innerHTML = `
+        ${toastHtml}
+        ${topbar}
+        <main>
+          ${mainPanels}
+          ${circleDetail}
+        </main>
+        ${tabBar}
+        ${quizModal}
+        ${commentModal}
+        ${createPostModal}
+        ${notificationsModal}
+      `;
+
+      // 如果处于聊天详情，确保输入框可聚焦体验更顺畅
+      // （不强制 focus，避免 iOS 频繁跳动）
+    }
+
+    // ------------------------------
+    // 事件绑定（事件委托）
+    // ------------------------------
+    root.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-action]');
+      if (!el) return;
+      const action = el.getAttribute('data-action');
+
+      if (action === 'switch-tab'){
+        const tab = el.getAttribute('data-tab');
+        state.currentTab = tab;
+        // 切换主页面时，如果在消息详情，返回消息列表
+        if (tab !== 'messages' && state.chatContext) state.chatContext = null;
+        if (state.activeCircleId) state.activeCircleId = null;
+        state.showQuiz = false;
+        render();
+      }
+
+      if (action === 'open-circle'){
+        const cid = el.getAttribute('data-circle-id');
+        state.activeCircleId = cid;
+        state.showQuiz = false;
+        state.quizStep = 0;
+        state.circleSubTab = 'forum';
+        render();
+      }
+
+      if (action === 'close-circle'){
+        state.activeCircleId = null;
+        state.showQuiz = false;
+        state.quizStep = 0;
+        // 返回到 discover 更贴近用户预期
+        if (state.currentTab !== 'discover') state.currentTab = 'discover';
+        render();
+      }
+
+      if (action === 'close-quiz'){
+        state.showQuiz = false;
+        state.quizStep = 0;
+        render();
+      }
+
+      if (action === 'verify-join'){
+        const cid = el.getAttribute('data-circle-id') || state.activeCircleId;
+        const circle = getCircle(cid);
+        if (!circle) return;
+        if (!circle.quiz || !circle.quiz.length){
+          handleJoinCircle(cid);
+          return;
+        }
+        state.activeCircleId = cid;
+        state.quizStep = 0;
+        state.showQuiz = true;
+        render();
+      }
+
+      if (action === 'quiz-answer'){
+        const idx = parseInt(el.getAttribute('data-answer-index'), 10);
+        const circle = getCircle(state.activeCircleId);
+        if (!circle || !circle.quiz) return;
+        const q = circle.quiz[state.quizStep];
+        if (!q) return;
+        if (idx === q.answer){
+          nextQuizOrJoin();
+        } else {
+          showToast('答案不太对哦，再想想？');
+        }
+        render();
+      }
+
+      if (action === 'switch-circle-subtab'){
+        const subtab = el.getAttribute('data-subtab');
+        state.circleSubTab = subtab;
+        render();
+      }
+
+      if (action === 'open-guideline'){
+        showToast('轻门槛验证：回答问答题即可加入私域');
+      }
+
+      if (action === 'search-demo'){
+        showToast('搜索演示：当前版本未接入接口');
+      }
+
+      if (action === 'close-modal'){
+        state.modal = null;
+        state.modalDraftText = '';
+        render();
+      }
+
+      if (action === 'open-notifications'){
+        state.modal = { type: 'notifications' };
+        render();
+      }
+
+      if (action === 'mark-all-notifications-read'){
+        markAllNotificationsRead();
+      }
+
+      if (action === 'post-like' || action === 'circle-post-like'){
+        const pid = el.getAttribute('data-post-id');
+        const post = findPostById(pid);
+        if (!post) return;
+
+        const postId = String(post.id);
+        const liked = isPostLiked(postId);
+        if (liked){
+          state.postLiked.delete(postId);
+          const currentLikes = getEffectivePostLikes(post);
+          const nextLikes = Math.max(0, currentLikes - 1);
+          if (!state.postOverrides[postId]) state.postOverrides[postId] = {};
+          state.postOverrides[postId].likes = nextLikes;
+          showToast('已取消点赞');
+        }else{
+          state.postLiked.add(postId);
+          const currentLikes = getEffectivePostLikes(post);
+          const nextLikes = currentLikes + 1;
+          if (!state.postOverrides[postId]) state.postOverrides[postId] = {};
+          state.postOverrides[postId].likes = nextLikes;
+          showToast('点赞成功');
+        }
+        persistState();
+        render();
+      }
+
+      if (action === 'post-comment' || action === 'circle-post-comment'){
+        const pid = el.getAttribute('data-post-id');
+        if (!pid) return;
+        state.modal = { type: 'comment', postId: String(pid) };
+        state.modalDraftText = '';
+        render();
+      }
+
+      if (action === 'post-share' || action === 'circle-post-share'){
+        const pid = el.getAttribute('data-post-id');
+        if (!pid) return;
+        const url = (location.href || '').split('#')[0] + '#post-' + encodeURIComponent(String(pid));
+        const doToast = () => showToast('分享链接已复制');
+        if (navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(url).then(doToast).catch(() => showToast('复制失败，请手动复制地址栏链接'));
+        }else{
+          showToast('当前浏览器不支持剪贴板复制，请手动复制地址栏链接');
+        }
+      }
+
+      if (action === 'fab-create-post'){
+        if (!state.activeCircleId) return;
+        state.modal = { type: 'create-post', circleId: String(state.activeCircleId) };
+        state.modalDraftText = '';
+        render();
+      }
+
+      if (action === 'quick-create-post'){
+        const joined = [...state.joinedCircles];
+        if (!joined.length){
+          showToast('先加入一个圈子，再发帖');
+          return;
+        }
+        state.modal = { type: 'create-post', circleId: String(joined[0]) };
+        state.modalDraftText = '';
+        render();
+      }
+
+      if (action === 'event-rsvp-toggle'){
+        const eid = el.getAttribute('data-event-id');
+        if (!eid) return;
+        toggleEventRsvp(eid);
+      }
+
+      if (action === 'event-demo'){
+        showToast('活动详情（演示）');
+      }
+
+      if (action === 'open-chat'){
+        const cid = el.getAttribute('data-circle-id');
+        state.chatContext = { circleId: cid };
+        // 保证在 messages tab 展示
+        state.currentTab = 'messages';
+        render();
+      }
+
+      if (action === 'back-to-message-list'){
+        state.chatContext = null;
+        render();
+      }
+
+      if (action === 'leave-circle'){
+        const cid = el.getAttribute('data-circle-id');
+        state.joinedCircles.delete(cid);
+        // 如果正在这个圈子的详情里，直接退出圈子详情
+        if (state.activeCircleId === cid) state.activeCircleId = null;
+        // 清理消息详情
+        if (state.chatContext && state.chatContext.circleId === cid) state.chatContext = null;
+        showToast('已退出圈子（演示）');
+        persistState();
+        render();
+      }
+    });
+
+    // 监听输入（搜索圈子）
+    root.addEventListener('input', (e) => {
+      const target = e.target;
+      if (!target || !target.matches) return;
+      if (target.matches('input[data-role="circle-search"]')){
+        state.circleSearchQuery = target.value || '';
+        render();
+      }
+    });
+
+    // 监听消息发送（submit）
+    root.addEventListener('submit', (e) => {
+      const anyForm = e.target.closest('form');
+      if (!anyForm) return;
+
+      const sendForm = e.target.closest('form[data-action="send-message"]');
+      if (sendForm){
+        e.preventDefault();
+
+        const cid = sendForm.getAttribute('data-circle-id');
+        const input = sendForm.querySelector('textarea[name="message"]');
+        if (!input) return;
+        const text = (input.value || '').trim();
+        if (!text){
+          showToast('先写点什么吧');
+          return;
+        }
+        input.value = '';
+
+        if (!state.chatByCircle[cid]) state.chatByCircle[cid] = [];
+        const now = new Date();
+        const time = (now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0'));
+        state.chatByCircle[cid].push({
+          id: 'me-' + Math.random().toString(16).slice(2),
+          from: '我',
+          avatar: null,
+          text: text,
+          time
+        });
+        showToast('消息已发送（已保存本地）');
+        persistState();
+        render();
+
+        // 滚动到底部：简单处理（不依赖复杂布局）
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 30);
+        return;
+      }
+
+      const commentForm = e.target.closest('form[data-action="submit-comment"]');
+      if (commentForm){
+        e.preventDefault();
+        const pid = commentForm.getAttribute('data-post-id');
+        const textarea = commentForm.querySelector('textarea[name="comment"]');
+        if (!pid || !textarea) return;
+        const text = (textarea.value || '').trim();
+        if (!text){
+          showToast('先写点评论内容');
+          return;
+        }
+        textarea.value = '';
+
+        const now = new Date();
+        const time = (now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0'));
+        if (!state.postCommentsById[pid]) state.postCommentsById[pid] = [];
+        state.postCommentsById[pid].push({
+          id: 'c-' + Math.random().toString(16).slice(2),
+          author: state.profile.name,
+          text,
+          time
+        });
+
+        const post = findPostById(pid);
+        if (post){
+          const current = getEffectivePostComments(post);
+          if (!state.postOverrides[pid]) state.postOverrides[pid] = {};
+          state.postOverrides[pid].comments = current + 1;
+        }
+
+        showToast('评论已发送（已保存本地）');
+        state.modal = null;
+        state.modalDraftText = '';
+        persistState();
+        render();
+        return;
+      }
+
+      const createPostForm = e.target.closest('form[data-action="submit-create-post"]');
+      if (createPostForm){
+        e.preventDefault();
+        const circleId = createPostForm.getAttribute('data-circle-id');
+        const textarea = createPostForm.querySelector('textarea[name="postContent"]');
+        if (!circleId || !textarea) return;
+        const content = (textarea.value || '').trim();
+        if (!content){
+          showToast('先写点内容再发布');
+          return;
+        }
+        textarea.value = '';
+
+        const id = getNextPostId();
+        const now = new Date();
+        const time = '刚刚';
+
+        const post = {
+          id,
+          circleId: String(circleId),
+          author: state.profile.name,
+          avatar: state.profile.avatar,
+          content,
+          likes: 0,
+          comments: 0,
+          time
+        };
+
+        if (!state.customPostsByCircle[post.circleId]) state.customPostsByCircle[post.circleId] = [];
+        state.customPostsByCircle[post.circleId].unshift(post);
+
+        showToast('发帖成功（已保存本地）');
+        state.modal = null;
+        state.modalDraftText = '';
+        persistState();
+        render();
+        return;
+      }
+    });
+
+    // ------------------------------
+    // 初始化：默认展示 discover
+    // ------------------------------
+    // 小修：确保 activeCircleId 不为空时不渲染主底部导航（已在 renderTabBar 处理）
+    state.currentTab = 'discover';
+    loadPersistedState();
+    render();
+  </script>
+</body>
+</html>
+
