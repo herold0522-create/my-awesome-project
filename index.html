@@ -334,6 +334,13 @@
       gap: 12px;
     }
 
+    /* 圈子列表：更适合电脑端的密度与宽度 */
+    .circles-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+    }
+
     /* 热议贴 */
     .post-item{
       padding: 14px;
@@ -462,8 +469,8 @@
       content:"";
       position:absolute; inset:0;
       background:
-        linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.75) 78%),
-        radial-gradient(600px 200px at 30% 0%, rgba(124,58,237,.35), transparent 60%);
+        linear-gradient(180deg, rgba(255,255,255,0.00), rgba(255,255,255,.35) 78%),
+        radial-gradient(600px 200px at 30% 0%, rgba(124,58,237,.16), transparent 60%);
     }
     .circle-back{
       position:absolute;
@@ -498,7 +505,7 @@
       letter-spacing: .01em;
     }
     .circle-head p{
-      color: rgba(255,255,255,.86);
+      color: rgba(15,23,42,.78);
       font-size: 13px;
       line-height: 1.45;
       display:-webkit-box;
@@ -679,6 +686,59 @@
       text-align: left;
     }
     .msg-row.me .msg-meta{ text-align:right; }
+
+    /* 消息面板：桌面双栏布局 */
+    .messages-layout{
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      gap: 12px;
+      align-items:start;
+    }
+    .messages-sidebar{
+      position: sticky;
+      top: 88px;
+    }
+    .messages-sidebar-list{
+      display:flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .msg-sidebar-item{
+      display:flex;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.65);
+      cursor:pointer;
+      transition: transform .15s, border-color .2s, background .2s;
+    }
+    .msg-sidebar-item:active{ transform: scale(.99); }
+    .msg-sidebar-item:hover{ border-color: rgba(124,58,237,.22); }
+    .msg-sidebar-item.active{
+      border-color: rgba(124,58,237,.35);
+      background: rgba(124,58,237,.08);
+    }
+    .msg-sidebar-thumb{
+      width:56px;
+      height:56px;
+      border-radius:16px;
+      border: 1px solid rgba(2,6,23,.12);
+      background: rgba(255,255,255,.55);
+      flex-shrink:0;
+      object-fit: cover;
+    }
+    .messages-main-card{
+      border-radius: var(--radius-lg);
+      border: 1px solid rgba(2,6,23,.10);
+      background: rgba(255,255,255,.65);
+    }
+
+    @media (max-width: 520px){
+      .messages-layout{ grid-template-columns: 1fr; }
+      .messages-sidebar{ position: static; top:auto; }
+    }
 
     .composer{
       position: sticky;
@@ -871,6 +931,7 @@
     /* 桌面：卡片网格更紧凑一点 */
     @media (min-width: 900px){
       .grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+      .circles-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
     }
 
     /* 移动端：收窄到接近手机视口 */
@@ -921,7 +982,7 @@
         tags: ['Popping', 'HipHop', '编舞'],
         members: 3420,
         desc: 'B-boy和B-girl的线上聚集地，分享日常练习、扒舞讨论与同城约练。',
-        cover: 'https://images.unsplash.com/photo-1535597408906-620a52538006?auto=format&fit=crop&q=80&w=800'
+        cover: 'https://images.unsplash.com/photo-1520975661595-6453be3f7070?auto=format&fit=crop&q=80&w=800'
       },
       {
         id: 'transit',
@@ -1063,6 +1124,7 @@
         avatar: null
       },
       circleSearchQuery: '',
+      messageSearchByCircleId: {}, // { [circleId]: string }
 
       // 用户在“论坛”里新增的帖子（持久化）
       customPostsByCircle: {}, // { [circleId]: Post[] }
@@ -1119,6 +1181,9 @@
         if (typeof data.circleSearchQuery === 'string'){
           state.circleSearchQuery = data.circleSearchQuery;
         }
+        if (data.messageSearchByCircleId && typeof data.messageSearchByCircleId === 'object'){
+          state.messageSearchByCircleId = data.messageSearchByCircleId;
+        }
         if (data.eventsRsvpByEventId && typeof data.eventsRsvpByEventId === 'object'){
           state.eventsRsvpByEventId = data.eventsRsvpByEventId;
         }
@@ -1141,6 +1206,7 @@
           postCommentsById: state.postCommentsById,
           profile: state.profile,
           circleSearchQuery: state.circleSearchQuery,
+          messageSearchByCircleId: state.messageSearchByCircleId,
           eventsRsvpByEventId: state.eventsRsvpByEventId,
           notificationReadIds: [...state.notificationReadIds]
         };
@@ -1294,13 +1360,13 @@
     const root = document.getElementById('appRoot');
 
     function renderTabBar(){
-      if (!state.activeCircleId && state.showQuiz === false && !state.modal){
+      if (!state.activeCircleId && state.showQuiz === false && !state.modal && !state.chatContext){
         return `
           <div class="tab-bar" role="navigation" aria-label="底部导航">
             <div class="tab-bar-inner">
               ${renderTab('discover', 'discover', 'fa-house', '首页')}
               ${renderTab('circles', 'circles', 'fa-compass', '圈子')}
-              ${renderTab('messages', 'messages', 'fa-message-dots', '消息')}
+              ${renderTab('messages', 'messages', 'fa-comment-dots', '消息')}
               ${renderTab('profile', 'profile', 'fa-user', '我的')}
             </div>
           </div>
@@ -1343,7 +1409,7 @@
         const joined = isJoined(circle.id);
         return `
           <div class="circle-item" data-action="open-circle" data-circle-id="${circle.id}">
-            <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+            <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="eager" />
             <div class="circle-meta">
               <div class="circle-top">
                 <div class="circle-name">${circle.name}</div>
@@ -1371,7 +1437,7 @@
         return `
           <article class="post-item">
             <div class="post-head">
-              <img class="avatar" src="${post.avatar}" alt="avatar" loading="lazy" />
+              <img class="avatar" src="${post.avatar}" alt="avatar" loading="eager" />
               <div>
                 <div class="author">${post.author}</div>
                 <div class="post-sub">${post.time} · 来自 ${circleName}</div>
@@ -1531,7 +1597,7 @@
           const joined = isJoined(circle.id);
           return `
             <div class="circle-item" data-action="open-circle" data-circle-id="${circle.id}">
-              <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+              <img class="circle-cover" src="${circle.cover}" alt="${circle.name}" loading="eager" />
               <div class="circle-meta">
                 <div class="circle-top">
                   <div class="circle-name">${circle.name}</div>
@@ -1569,20 +1635,24 @@
               ${q ? `已筛选：包含“${escapeHtml(state.circleSearchQuery)}”的 ${filteredCircles.length} 个条目。` : '输入关键字可快速筛选圈子列表。'}
             </div>
           </div>
-          <div>${list}</div>
+          <div class="circles-grid">${list}</div>
         </section>
       `;
     }
 
     function renderMessagesPanel(){
       const joined = [...state.joinedCircles];
+      const activeChatCircleId = state.chatContext && state.chatContext.circleId;
+
       if (joined.length === 0){
         return `
           <section class="panel active" id="panel-messages" aria-label="消息">
-            <div class="card card-pad" style="margin-top:8px;">
-              <div style="display:flex; align-items:center; gap:12px;">
-                <i class="fa-solid fa-box-open" style="font-size:40px; color: rgba(167,139,250,.95)"></i>
-                <div>
+            <div class="messages-layout">
+              <div class="messages-sidebar">
+                <div class="section-title" style="margin-top: 6px;">
+                  <h2><i class="fa-solid fa-comment-dots"></i> 私域消息</h2>
+                </div>
+                <div class="card card-pad" style="margin-top: 12px;">
                   <div style="font-weight:1000; margin-bottom:6px;">消息列表空空如也</div>
                   <div style="color: var(--muted); font-size:13px; line-height:1.5;">先去“圈子”通过轻门槛验证加入一个圈子吧。</div>
                   <div style="margin-top:12px;">
@@ -1590,80 +1660,187 @@
                   </div>
                 </div>
               </div>
+              <div class="messages-main-card" style="padding: 16px;">
+                <div style="font-weight:1000; font-size:14px; margin-bottom:6px;">提示</div>
+                <div style="color: var(--muted); font-size:13px; line-height:1.6;">
+                  加入圈子后，这里会展示聊天列表与对话内容（全部本地演示，刷新不会丢）。
+                </div>
+              </div>
             </div>
           </section>
         `;
       }
 
-      const circleButtons = joined.map(cid => {
+      const sidebar = joined.map(cid => {
         const circle = getCircle(cid);
         const last = (state.chatByCircle[cid] && state.chatByCircle[cid][state.chatByCircle[cid].length - 1]) || null;
         const lastText = last ? last.text : '暂无消息';
+        const isActive = String(cid) === String(activeChatCircleId);
         return `
-          <div class="circle-item" style="padding:12px;" data-action="open-chat" data-circle-id="${cid}">
-            <img class="circle-cover" style="width:56px;height:56px;border-radius:16px;" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
-            <div class="circle-meta">
-              <div class="circle-top">
-                <div class="circle-name">${circle.name}</div>
-                <span class="chip badge"><i class="fa-regular fa-clock"></i> 置顶</span>
+          <div
+            class="msg-sidebar-item ${isActive ? 'active' : ''}"
+            data-action="open-chat"
+            data-circle-id="${cid}"
+            role="button"
+            aria-label="打开聊天：${escapeHtml(circle.name)}"
+          >
+            <img class="msg-sidebar-thumb" src="${circle.cover}" alt="${circle.name}" loading="eager" />
+            <div style="min-width:0; flex:1;">
+              <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+                <div class="circle-name" style="font-size:14px;">${escapeHtml(circle.name)}</div>
+                <span class="chip badge" style="background: rgba(124,58,237,.10); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92);">
+                  <i class="fa-regular fa-clock"></i> 置顶
+                </span>
               </div>
-              <div class="desc" style="max-width: 240px;">${lastText}</div>
-              <div class="members"><i class="fa-solid fa-comments"></i> 点击进入聊天</div>
+              <div class="desc" style="max-width: 240px; margin-top: 8px;">${escapeHtml(lastText)}</div>
             </div>
           </div>
         `;
       }).join('');
 
-      const activeChatCircleId = state.chatContext && state.chatContext.circleId;
       if (!activeChatCircleId){
         return `
           <section class="panel active" id="panel-messages" aria-label="消息">
-            <div class="section-title">
-              <h2><i class="fa-solid fa-message-dots"></i> 私域消息</h2>
+            <div class="messages-layout">
+              <div class="messages-sidebar">
+                <div class="section-title" style="margin-top: 6px;">
+                  <h2><i class="fa-solid fa-comment-dots"></i> 私域消息</h2>
+                  <div class="link" style="cursor:default">${joined.length} 个圈子</div>
+                </div>
+                <div class="messages-sidebar-list">
+                  ${sidebar}
+                </div>
+              </div>
+              <div class="messages-main-card" style="padding: 16px;">
+                <div style="font-weight:1000; font-size:14px; margin-bottom:6px;">选择左侧开始聊天</div>
+                <div style="color: var(--muted); font-size:13px; line-height:1.6;">
+                  你已经加入的圈子将显示在左侧列表中。点击任一圈子进入对话。
+                </div>
+                <div style="margin-top: 14px; display:flex; gap: 10px; flex-wrap: wrap;">
+                  <span class="chip badge" style="background: rgba(255,255,255,.55); border-color: rgba(2,6,23,.10); color: rgba(15,23,42,.75);">
+                    <i class="fa-solid fa-shield-halved" style="margin-right:6px;"></i> 私密对话
+                  </span>
+                  <span class="chip" style="background: rgba(124,58,237,.10); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92);">
+                    <i class="fa-solid fa-flask" style="margin-right:6px;"></i> 本地演示
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>${circleButtons}</div>
           </section>
         `;
       }
 
       const circle = getCircle(activeChatCircleId);
       const msgs = state.chatByCircle[activeChatCircleId] || [];
+      const messageQuery = (state.messageSearchByCircleId && state.messageSearchByCircleId[String(activeChatCircleId)]) ? state.messageSearchByCircleId[String(activeChatCircleId)] : '';
+      const mq = (messageQuery || '').trim().toLowerCase();
+      const filteredMsgs = mq ? msgs.filter(m => String(m.text || '').toLowerCase().includes(mq)) : msgs;
+
       return `
         <section class="panel active" id="panel-messages" aria-label="消息详情">
-          <div class="card card-pad" style="margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:12px;">
-            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
-              <button class="icon-btn" type="button" data-action="back-to-message-list" aria-label="返回列表" style="width:40px;height:40px;">
-                <i class="fa-solid fa-arrow-left"></i>
-              </button>
-              <div style="min-width:0;">
-                <div style="font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${circle.name}</div>
-                <div style="color: var(--muted); font-size: 12px; margin-top:4px;">聊天演示：本地消息，不会上传</div>
+          <div class="messages-layout">
+            <div class="messages-sidebar">
+              <div class="section-title" style="margin-top: 6px;">
+                <h2 style="gap:8px;"><i class="fa-solid fa-comment-dots"></i> 私域</h2>
+                <div class="link" style="cursor:default">聊天</div>
+              </div>
+              <div class="messages-sidebar-list">
+                ${sidebar}
+              </div>
+              <div style="margin-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.6; padding: 0 2px;">
+                点击左侧切换圈子对话（全部本地演示）。
               </div>
             </div>
-            <span class="chip good"><i class="fa-solid fa-shield-halved"></i> 已验证</span>
-          </div>
 
-          <div class="msg-list">
-            ${msgs.map(m => {
-              const isMe = m.from === '我';
-              const avatarHtml = isMe ? '' : (m.avatar ? `<img class="avatar" src="${m.avatar}" alt="" style="width:28px;height:28px;">` : `<div class="avatar" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`);
-              return `
-                <div class="msg-row ${isMe ? 'me' : ''}">
-                  ${isMe ? '' : avatarHtml}
-                  <div>
-                    <div class="msg-bubble">${escapeHtml(m.text)}</div>
-                    <div class="msg-meta">${m.time || ''}</div>
+            <div class="messages-main">
+              <div class="messages-main-card" style="padding: 16px; margin-bottom: 12px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+                    <div style="width:40px;height:40px;border-radius:16px;border:1px solid rgba(2,6,23,.10); background: rgba(124,58,237,.10); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                      <i class="fa-solid fa-comment-dots" style="color: rgba(76,29,149,.95)"></i>
+                    </div>
+                    <div style="min-width:0;">
+                      <div style="font-weight:1000; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(circle.name)}</div>
+                      <div style="color: var(--muted); font-size: 12px; margin-top:4px;">聊天演示：本地消息，不会上传</div>
+                    </div>
+                  </div>
+                  <span class="chip good" style="background: rgba(34,197,94,.14); border-color: rgba(34,197,94,.30); color: rgba(20,83,45,.96);">
+                    <i class="fa-solid fa-shield-halved"></i> 已验证
+                  </span>
+                </div>
+
+                <div style="margin-top: 12px;">
+                  <div style="font-weight:1000; font-size: 12px; color: var(--muted2); margin-bottom: 8px;">搜索本圈聊天内容</div>
+                  <div style="display:flex; gap:10px; align-items:center;">
+                    <input
+                      type="text"
+                      data-role="message-search"
+                      aria-label="搜索消息"
+                      placeholder="输入关键词…"
+                      value="${escapeHtml(messageQuery)}"
+                      style="flex:1; border-radius: 16px; border: 1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65); color: rgba(15,23,42,.92); padding: 10px 12px; outline:none; font-size: 13px;"
+                    />
+                    <button
+                      class="action-btn"
+                      type="button"
+                      data-action="clear-message-search"
+                      style="flex:0; width:44px; height:42px; border-radius: 16px; border:1px solid rgba(2,6,23,.10); background: rgba(255,255,255,.65);"
+                      aria-label="清空搜索"
+                    >
+                      <i class="fa-solid fa-xmark"></i>
+                    </button>
+                  </div>
+                  <div style="color: var(--muted); font-size: 12px; margin-top: 8px;">
+                    已显示 <b style="color: rgba(76,29,149,.98)">${filteredMsgs.length}</b> 条消息
                   </div>
                 </div>
-              `;
-            }).join('')}
-          </div>
 
-          <div class="composer">
-            <form data-action="send-message" data-circle-id="${activeChatCircleId}">
-              <textarea class="input" name="message" rows="1" placeholder="输入消息…"></textarea>
-              <button class="send-btn" type="submit" aria-label="发送"><i class="fa-solid fa-paper-plane"></i></button>
-            </form>
+                <div style="margin-top: 12px;">
+                  <div style="font-weight:1000; font-size: 12px; color: var(--muted2); margin-bottom: 8px;">快捷回复</div>
+                  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    ${[
+                      '你好！我来认识一下',
+                      '我也想了解一下～',
+                      '这个活动我报名了',
+                      '有推荐吗？'
+                    ].map(t => `
+                      <button
+                        type="button"
+                        class="chip badge"
+                        data-action="quick-reply"
+                        data-text="${escapeHtml(t)}"
+                        style="background: rgba(124,58,237,.10); border-color: rgba(124,58,237,.22); color: rgba(76,29,149,.92); cursor:pointer;"
+                      >
+                        ${escapeHtml(t)}
+                      </button>
+                    `).join('')}
+                  </div>
+                </div>
+              </div>
+
+              <div class="msg-list">
+                ${filteredMsgs.map(m => {
+                  const isMe = m.from === '我';
+                  const avatarHtml = isMe ? '' : (m.avatar ? `<img class="avatar" src="${m.avatar}" alt="" style="width:28px;height:28px;">` : `<div class="avatar" style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;color:rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`);
+                  return `
+                    <div class="msg-row ${isMe ? 'me' : ''}">
+                      ${isMe ? '' : avatarHtml}
+                      <div>
+                        <div class="msg-bubble">${escapeHtml(m.text)}</div>
+                        <div class="msg-meta">${escapeHtml(m.time || '')}</div>
+                      </div>
+                    </div>
+                  `;
+                }).join('')}
+              </div>
+
+              <div class="composer">
+                <form data-action="send-message" data-circle-id="${activeChatCircleId}">
+                  <textarea class="input" name="message" rows="1" placeholder="输入消息…"></textarea>
+                  <button class="send-btn" type="submit" aria-label="发送"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+              </div>
+            </div>
           </div>
         </section>
       `;
@@ -1706,7 +1883,7 @@
                 const circle = getCircle(cid);
                 return `
                   <div class="circle-item" style="padding:12px;">
-                    <img class="circle-cover" style="width:56px;height:56px;border-radius:16px;" src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+                    <img class="circle-cover" style="width:56px;height:56px;border-radius:16px;" src="${circle.cover}" alt="${circle.name}" loading="eager" />
                     <div class="circle-meta">
                       <div class="circle-top">
                         <div class="circle-name">${circle.name}</div>
@@ -1777,7 +1954,7 @@
           <section class="panel active" aria-label="圈子详情">
             <div style="padding: 0 16px;">
               <div class="circle-cover-wrap">
-                <img src="${circle.cover}" alt="${circle.name}" loading="lazy" />
+                <img src="${circle.cover}" alt="${circle.name}" loading="eager" />
                 <button class="circle-back" type="button" data-action="close-circle" aria-label="返回">
                   <i class="fa-solid fa-arrow-left"></i>
                 </button>
@@ -1819,15 +1996,16 @@
               <div class="module" style="margin-bottom: 30px;">
                 <h2><i class="fa-solid fa-image" style="color: rgba(232,121,249,.98)"></i> 圈内精彩前瞻</h2>
                 <div class="preview-row">
-                  ${[1,2,3].map(i => {
-                    const url = 'https://images.unsplash.com/photo-' + (1500000000000 + i*10000) + '?auto=format&fit=crop&q=80&w=800';
-                    return `
-                      <div class="preview-thumb">
-                        <img src="${url}" alt="preview" loading="lazy" />
-                        <div class="preview-lock"><i class="fa-solid fa-lock"></i></div>
-                      </div>
-                    `;
-                  }).join('')}
+                  ${[
+                    'https://images.unsplash.com/photo-1541844053589-346841d0b34c?auto=format&fit=crop&q=80&w=800',
+                    'https://images.unsplash.com/photo-1520975661595-6453be3f7070?auto=format&fit=crop&q=80&w=800',
+                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=800'
+                  ].map(url => `
+                    <div class="preview-thumb">
+                      <img src="${url}" alt="preview" loading="lazy" />
+                      <div class="preview-lock"><i class="fa-solid fa-lock"></i></div>
+                    </div>
+                  `).join('')}
                 </div>
               </div>
             </main>
@@ -1898,7 +2076,7 @@
                     const comments = getEffectivePostComments(post);
                     const liked = isPostLiked(post.id);
                     const avatarHtml = post.avatar
-                      ? `<img class="avatar" src="${post.avatar}" alt="avatar" loading="lazy" />`
+                      ? `<img class="avatar" src="${post.avatar}" alt="avatar" loading="eager" />`
                       : `<div class="avatar" style="display:flex;align-items:center;justify-content:center; color: rgba(15,23,42,.55); background: rgba(255,255,255,.65);">◎</div>`;
                     return `
                       <article class="post-item">
@@ -2375,6 +2553,28 @@
         markAllNotificationsRead();
       }
 
+      if (action === 'clear-message-search'){
+        const cid = state.chatContext && state.chatContext.circleId ? String(state.chatContext.circleId) : null;
+        if (!cid) return;
+        if (!state.messageSearchByCircleId) state.messageSearchByCircleId = {};
+        state.messageSearchByCircleId[cid] = '';
+        persistState();
+        render();
+      }
+
+      if (action === 'quick-reply'){
+        const text = el.getAttribute('data-text') || '';
+        const textarea = root.querySelector('form[data-action="send-message"] textarea[name="message"]');
+        if (textarea){
+          if (textarea.value && textarea.value.trim().length){
+            textarea.value = textarea.value + ' ' + text;
+          }else{
+            textarea.value = text;
+          }
+          textarea.focus();
+        }
+      }
+
       if (action === 'post-like' || action === 'circle-post-like'){
         const pid = el.getAttribute('data-post-id');
         const post = findPostById(pid);
@@ -2481,6 +2681,14 @@
       if (!target || !target.matches) return;
       if (target.matches('input[data-role="circle-search"]')){
         state.circleSearchQuery = target.value || '';
+        render();
+        return;
+      }
+      if (target.matches('input[data-role="message-search"]')){
+        const cid = state.chatContext && state.chatContext.circleId ? String(state.chatContext.circleId) : null;
+        if (!cid) return;
+        if (!state.messageSearchByCircleId) state.messageSearchByCircleId = {};
+        state.messageSearchByCircleId[cid] = target.value || '';
         render();
       }
     });
